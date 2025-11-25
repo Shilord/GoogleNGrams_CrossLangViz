@@ -2,5 +2,8 @@ streamlit
 numpy
 pandas
 plotly
-uvicorn
 altair
+deep-translator
+folium
+geopandas
+streamlit-folium

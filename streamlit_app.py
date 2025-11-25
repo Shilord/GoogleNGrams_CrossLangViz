@@ -1,8 +1,6 @@
 import streamlit as st
-import pandas as pd
-import altair as alt
-import plotly.express as px
-import numpy as np
+import altair as alt # Needed for alt.themes.enable
+from utils import *
 
 st.set_page_config(
     page_title="Linguistic Trends Dashboard",
@@ -11,169 +9,203 @@ st.set_page_config(
     initial_sidebar_state="collapsed" 
 )
 
+# from streamlit_extras.stylable_container import stylable_container
+
+#Build a function to get input language, current setting to en
+input_language = 'en'
+
+if 'search_run' not in st.session_state:
+    st.session_state['search_run'] = False
+if 'final_data' not in st.session_state:
+    # Initialize with mock data structure or None
+    st.session_state['final_data'] = pd.DataFrame() 
+
+#Build world map
+@st.cache_resource
+def load_empty_map():
+    empty_map = gpd.read_file("soc_071_world_languages.zip") 
+    empty_map['geometry'] = empty_map['geometry'].simplify(tolerance=0.03, preserve_topology=True)
+
+    # Cleaning map data
+    empty_map = empty_map.loc[:, ['COUNTRY', 'FIRST_OFFI', 'geometry']]
+    empty_map = empty_map.rename(columns={'COUNTRY': 'Country', 'FIRST_OFFI': 'Primary Language (based on 2015)'})
+    empty_map['Primary Language (based on 2015)'] = empty_map['Primary Language (based on 2015)'].replace({'English': 'English', 'Spanish': 'Español', 'French': 'Français', 'German': 'Deutsch', 'Italian': 'Italiano', 'Russian': 'Русский', 'Standard Chinese or Mandarin': '中文', 'Hebrew': 'עִברִית'})
+    map = empty_map.copy(deep=True)
+    return map
+
+empty_map = load_empty_map()
+
 alt.themes.enable("dark")
 
-st.markdown("""
-<style>
+load_css('assets/styles.css')
 
-[data-testid="block-container"] {
-    padding-left: 2rem;
-    padding-right: 2rem;
-    padding-top: 1rem;
-    padding-bottom: 0rem;
-    margin-bottom: -7rem;
-}
-
-[data-testid="stVerticalBlock"] {
-    padding-left: 0rem;
-    padding-right: 0rem;
-}
-
-[data-testid="stMetric"] {
-    background-color: #393939;
-    text-align: center;
-    padding: 15px 0;
-}
-
-[data-testid="stMetricLabel"] {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-@st.cache_data
-def get_mock_map_data():
-    data = {
-        'country': ['USA', 'Canada', 'Brazil', 'France', 'Germany', 'Russia', 'China', 'Australia', 'India', 'Argentina'],
-        'iso_alpha': ['USA', 'CAN', 'BRA', 'FRA', 'DEU', 'RUS', 'CHN', 'AUS', 'IND', 'ARG'],
-        'usage_frequency': np.random.randint(100, 10000, 10)
-    }
-    return pd.DataFrame(data)
-
-@st.cache_data
-def get_mock_time_series():
-    years = list(range(1600, 2023))
-    val = 50
-    values = []
-    for y in years:
-        change = np.random.randint(-5, 7)
-        val = max(0, val + change)
-        values.append(val)
-    return pd.DataFrame({'year': years, 'frequency': values})
-
-
-def make_world_map(input_df, input_id, input_column, input_color_theme):
-    choropleth = px.choropleth(
-        input_df, 
-        locations=input_id, 
-        color=input_column, 
-        locationmode="ISO-3", 
-        color_continuous_scale=input_color_theme,
-        range_color=(0, max(input_df[input_column])),
-        scope="world",
-        labels={'usage_frequency':'Frequency'}
-    )
-    choropleth.update_layout(
-        template='plotly_dark',
-        plot_bgcolor='rgba(0, 0, 0, 0)',
-        paper_bgcolor='rgba(0, 0, 0, 0)',
-        margin=dict(l=0, r=0, t=0, b=0),
-        width = 500 
-    )
-    return choropleth
-
-def make_time_series(input_df):
-    chart = alt.Chart(input_df).mark_area(
-        line={'color':'#29b5e8'},
-        color=alt.Gradient(
-            gradient='linear',
-            stops=[alt.GradientStop(color='#29b5e8', offset=0),
-                   alt.GradientStop(color='rgba(41, 181, 232, 0)', offset=1)],
-            x1=1, x2=1, y1=1, y2=0
-        )
-    ).encode(
-        x=alt.X('year:O', axis=alt.Axis(title="Year", labelAngle=0)),
-        y=alt.Y('frequency:Q', axis=alt.Axis(title="Ngram Frequency")),
-        tooltip=['year', 'frequency']
-    ).properties(
-        title='Usage Over Time',
-        height=300
-    )
-    return chart
 
 st.title('Exploring Multicultural Linguistic Trends Through Google Ngrams')
-st.markdown('---')
 
-input_col1, input_col2, input_col3 = st.columns([2, 2, 1], gap="large")
 
-with input_col1:
-    target_word = st.text_input("Enter Keyword", value="example")
-    
-    year_range = st.slider(
-        "Select Year Range",
-        min_value=1600,
-        max_value=2022,
-        value=(1900, 2022)
+col_keyword, col_expander = st.columns([3, 1])
+
+with col_keyword:
+    target_word = st.text_input(
+        "Enter Keyword", 
+        # value="example", 
+        label_visibility="hidden", 
+        placeholder="Enter Keyword"
     )
 
-with input_col2:
+with col_expander:
+    with st.expander("Add Context"):
+        context_topics = st.text_input(
+            "Context Topics",
+            placeholder="e.g., finance, technology",
+            # label_visibility="collapsed",
+            help="A list of words that set the theme or context to narrow the search scope for the main keyword (e.g., 'medicine' or '19th century art') ."
+        )
+        pos_tag = st.selectbox(
+            "Part of Speech", 
+            ['None', 'Noun', 'Adjective', 'Verb', 'Adverb'],
+            # index=0,
+            # label_visibility="collapsed",
+            help="Filter the keyword by its grammatical role in the corpus (e.g., searching 'run' only as a Verb)."
+        )
+
+
+st.subheader("Language and Synonym Settings")
+col_lang, col_synonym_toggle, col_num_synonyms = st.columns([3.5, 1.5, 1]) 
+def update_language_state():
+    """Reads the current widget value and saves it to session_state."""
+    # 'lang_select_widget' is the key assigned to the multiselect below.
+    st.session_state['selected_languages'] = st.session_state['lang_select_widget']
+with col_lang:
+    # languages = ['English', 'Chinese', 'French', 'German', 'Hebrew', 'Italian', 'Russian', 'Spanish']
+    # selected_langs = st.multiselect("Select Languages", languages, default=['English'])
+
     languages = ['English', 'Chinese', 'French', 'German', 'Hebrew', 'Italian', 'Russian', 'Spanish']
-    selected_langs = st.multiselect("Select Languages", languages, default=['English'])
+    ALL_LANGUAGES_OPTION = "All Languages"
 
-with input_col3:
+    options_list = [ALL_LANGUAGES_OPTION] + languages
+
+    if 'selected_languages' not in st.session_state:
+        st.session_state['selected_languages'] = ['English'] 
+
+    if ALL_LANGUAGES_OPTION in st.session_state['selected_languages'] and len(st.session_state['selected_languages']) != len(languages):
+        st.session_state['selected_languages'] = languages
+
+    selected_langs = st.multiselect(
+        "Select Languages", 
+        options_list, 
+        default=st.session_state['selected_languages'], 
+        on_change=update_language_state,
+        key = 'lang_select_widget')
+
+    if ALL_LANGUAGES_OPTION in selected_langs:
+        filter_langs = languages 
+    else:
+        filter_langs = [lang for lang in selected_langs if lang != ALL_LANGUAGES_OPTION]
+
+with col_synonym_toggle:
     st.write("Include Synonyms?")
-    synonyms = st.radio("Synonyms", ["Yes", "No"], horizontal=True, label_visibility="collapsed")
+    synonyms_choice = st.radio(
+        "Synonyms",
+        ["Yes", "No"],
+        horizontal=True,
+        label_visibility="collapsed",
+        key="synonym_radio"
+    )
+
+# Conditional Input for Number of Synonyms
+num_synonyms = 0
+if synonyms_choice == "Yes":
+    with col_num_synonyms:
+        # st.caption is used to create the aligned 'Count' label
+        st.caption("Synonyms Count") 
+        num_synonyms = st.number_input(
+            "Synonyms Count",
+            min_value=1,
+            max_value=20,
+            value=5,
+            step=1,
+            label_visibility="collapsed",
+            key="num_synonyms_input",
+            help="Maximum number of related synonyms to include in the search."
+        )
+else:
+    with col_num_synonyms:
+        st.write("") 
 
 
+_,col_btn, _ = st.columns([1, 1, 1])
+with col_btn:
+    search_button = st.button(
+        "Run Linguistic Search", 
+        type="primary", 
+        use_container_width=True,
+        key="search_run_button"
+    )
 
-st.markdown("### Global Prevalence")
+# st.markdown("---")
+# st.write(f"**Current Search Word:** `{target_word}`")
+# st.write(f"**Context Topics:** `{context_topics or 'None'}` | **POS Tag:** `{pos_tag}`")
+# st.write(f"**Languages:** `{', '.join(selected_langs)}`")
+# st.write(f"**Include Synonyms:** `{synonyms_choice}` (Count: `{num_synonyms}`)")
+# st.write(f"**Target Year:** `{year_range}`")
 
+@st.cache_data
+def get_synonyms_and_translations(target_word,num_synonyms,context_topics,pos_tag,input_language,selected_langs,is_phrase):
+    #Find synonyms of target word
+    if synonyms_choice=='Yes' and is_phrase==False:
+        synonyms = get_synonyms(target_word,num_synonyms,context_topics,pos_tag)
+        print(f"Synonyms: {synonyms}")
+    else:
+        synonyms = []
 
-df_map = get_mock_map_data()
-map_theme = 'plasma' 
+    #Find translations in 7 languages for all words and synonyms
+    all_dfs = []
+    for word in [target_word]+synonyms:
+        is_synonym_flag = 1 if word != target_word else 0
+        translations_df = get_translations(word,input_language,[lang_to_lang_translation[i] for i in selected_langs])
+        translations_df['is_synonym'] = is_synonym_flag
+        all_dfs.append(translations_df)
 
-map_chart = make_world_map(df_map, 'iso_alpha', 'usage_frequency', map_theme)
-st.plotly_chart(map_chart, use_container_width=True)
+    raw_final_df = pd.concat(all_dfs, ignore_index=True)
 
-st.markdown("---")
+    dedup_df = raw_final_df.sort_values(by='is_synonym', ascending=True)
 
-col_bottom = st.columns((2, 1), gap='medium')
+    final_df = dedup_df.drop_duplicates(
+        subset=['word', 'language', 'year'], 
+        keep='first'
+    )
+    return final_df
 
-with col_bottom[0]:
-    st.markdown("#### Historical Frequency Trends")
-    df_ts = get_mock_time_series()
-    df_ts_filtered = df_ts[(df_ts['year'] >= year_range[0]) & (df_ts['year'] <= year_range[1])]
-    
-    time_chart = make_time_series(df_ts_filtered)
-    st.altair_chart(time_chart, use_container_width=True)
+if search_button:
+    try:
+        if len(target_word.strip().split(' '))>1:
+            IS_PHRASE = True
+        else:
+            IS_PHRASE = False
+        st.session_state['final_data'] = get_synonyms_and_translations(target_word,num_synonyms,context_topics,pos_tag,input_language,filter_langs,IS_PHRASE)
+        
+        st.session_state['search_run'] = True      
+    except ValueError as e:
+        st.session_state['search_run'] = False
+        # st.error(f"Validation Error: {e}")
 
-with col_bottom[1]:
-    st.markdown("#### Associated Word Cloud")
+if st.session_state['search_run']:
+    st.subheader("Historical Date Filter")
+    year_range = st.slider(
+        "Select Target Year",
+        min_value=1600,
+        max_value=2022,
+        value=2000, 
+        step=1,
+        help="Select a single specific year for the corpus analysis."
+    )
+    world_map = empty_map.copy(deep=True)
+    create_frequency_map(world_map, st.session_state['final_data'], year_range)
 
-    
-    st.info(f"Word Cloud for term: **'{target_word}'**")
-    
-    mock_words = pd.DataFrame({
-        'word': ['linguistics', 'trends', 'data', 'culture', 'history', 'analysis', 'google', 'books'],
-        'value': [100, 80, 65, 45, 40, 30, 25, 20]
-    })
-    
-    cloud_placeholder = alt.Chart(mock_words).mark_text().encode(
-        x=alt.X('value:Q', axis=None),
-        y=alt.Y('word:N', axis=None, sort='-x'),
-        size=alt.Size('value:Q', legend=None, scale=alt.Scale(range=[15, 50])),
-        color=alt.Color('value:Q', legend=None, scale=alt.Scale(scheme='blues'))
-    ).properties(height=250).configure_view(strokeWidth=0)
-    
-    st.altair_chart(cloud_placeholder, use_container_width=True)
+    col_chart_left, col_chart_right = st.columns([1, 1])
 
+    with col_chart_left:
+        time_chart = create_timeseries(st.session_state['final_data'])
+        st.plotly_chart(time_chart, use_container_width=True)
 
-with st.expander('About this Dashboard'):
-    st.write('''
-        - **Data Source**: Google Ngrams Viewer (Mock data used for UI demo).
-        - **Map**: Visualizes the prevalence of the term across different linguistic regions.
-        - **Time Series**: Shows the frequency of the term from 1600 to 2022.
-    ''')

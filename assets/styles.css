@@ -1,0 +1,75 @@
+/* --- Keyword Input Styling (Prominent) --- */
+/* Apply styling to the input box itself */
+div[data-testid="stTextInput"] > div > input {
+    font-size: 24px;
+    /* padding: 10px; */
+    border: 3px solid #FF4B4B;
+    /* border-radius: 8px; */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    /* margin-top: 100px !important; Pull the box up */
+    padding-bottom: 0px !important;
+}
+
+div[data-testid="stTextInput"] > label {
+    /* Set height to zero and aggressively remove margin/padding */
+    height: 0 !important;
+    margin-top: -20px !important; 
+    padding-bottom: 0 !important;
+    overflow: hidden; 
+} 
+
+/* --- Context Expander Alignment Fix (Vertical Alignment with Keyword Box) --- */
+div[data-testid="stExpander"] {
+    margin-top: 0px; 
+    height: 10%
+}
+div[data-testid="stExpander"] > button {
+    /* Reduce top and bottom padding significantly to make the header shorter */
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+    /* You might also need this to align it vertically with the keyword box */
+    margin-top: -10px !important; 
+}
+/* --- Synonym Count Alignment Fix --- */
+/* Style the caption label for the synonym count to align it correctly */
+.st-emotion-cache-1kyx2k1 { /* Target the Streamlit caption element wrapper */
+    margin-bottom: -10px; /* Pull the label up closer to the input box */
+    margin-bottom: -10px !important;
+    text-align: center; /* Center the 'Count' label */
+}
+
+/* --- Year Slider Styling (Final Handle-Only Highlight Fix) --- */
+
+/* Gray out the entire slider track */
+div[data-testid="stTickSlider"] div[data-baseweb="slider"] {
+    background: #555555 !important;
+}
+
+/* Make all inner track divs transparent/gray */
+div[data-testid="stTickSlider"] div[data-baseweb="slider"] > div > div > div {
+    background: transparent !important;
+}
+
+/* Color ONLY the thumb/handle */
+div[data-testid="stTickSlider"] div[role="slider"] {
+    background-color: #FF4B4B !important;
+    border: 3px solid #FFFFFF !important;
+}
+div[data-testid="stForm"] + div[data-testid="stVerticalBlock"] > div:nth-child(2) {
+    margin-bottom: -15px !important; 
+}
+
+/* Target the container holding the Count input and remove top margin */
+div[data-testid="stVerticalBlock"] > div:nth-child(3) {
+    margin-top: 0px !important;
+}
+
+/* More generalized approach targeting stRadio itself */
+div[data-testid="stRadio"] {
+    margin-bottom: -15px !important; /* Pulls the radio button down/reduces space below it */
+}
+
+/* Target the Number Input itself to remove residual top space */
+div[data-testid="stNumberInput"] {
+    margin-top: -10px !important;
+}
