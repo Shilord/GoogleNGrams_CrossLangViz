@@ -1,0 +1,6 @@
+[theme]
+primaryColor="#2962FF"        # Example: Cornflower Blue (This is your accent color)
+backgroundColor="#0d1118"     # Standard Streamlit Dark Theme Background
+secondaryBackgroundColor="#262730" # Standard Streamlit Dark Theme Secondary Background
+textColor="#FAFAFA"           # Standard Streamlit Dark Theme Text (White/Light Gray)
+font="sans-serif"

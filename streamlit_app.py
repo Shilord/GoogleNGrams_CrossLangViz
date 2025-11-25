@@ -1,5 +1,4 @@
 import streamlit as st
-import altair as alt # Needed for alt.themes.enable
 from utils import *
 
 st.set_page_config(
@@ -34,8 +33,6 @@ def load_empty_map():
     return map
 
 empty_map = load_empty_map()
-
-alt.themes.enable("dark")
 
 load_css('assets/styles.css')
 
