@@ -2,9 +2,11 @@ import pandas as pd
 import numpy as np
 from deep_translator import GoogleTranslator
 import requests
+import detectlanguage
 
 languages = ['en', 'es', 'fr', 'de', 'it', 'ru', 'zh-CN', 'iw'] # list of languages used
 NGRAM_API_URL = "https://books.google.com/ngrams/json" # API endpoint
+detectlanguage.configuration.api_key = "2f804e5b6f76b1bacb52d2ad6667f374" # personal API key for detectlanguage service
 
 # sets parameters for API call
 def set_params(word, corpus):
@@ -52,3 +54,7 @@ def get_frequency(df):
 # main function to run (combines above functions)
 def get_df(word, input_lang):
     return get_frequency(get_languages(word, input_lang))
+
+# detect language of input word usage
+def detect_language(word):
+    return detectlanguage.detect_code(word)
