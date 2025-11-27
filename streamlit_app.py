@@ -10,8 +10,6 @@ st.set_page_config(
 
 # from streamlit_extras.stylable_container import stylable_container
 
-#Build a function to get input language, current setting to en
-input_language = 'en'
 
 if 'search_run' not in st.session_state:
     st.session_state['search_run'] = False
@@ -145,7 +143,7 @@ with col_btn:
 # st.write(f"**Context Topics:** `{context_topics or 'None'}` | **POS Tag:** `{pos_tag}`")
 # st.write(f"**Languages:** `{', '.join(selected_langs)}`")
 # st.write(f"**Include Synonyms:** `{synonyms_choice}` (Count: `{num_synonyms}`)")
-# st.write(f"**Target Year:** `{year_range}`")
+# # st.write(f"**Target Year:** `{year_range}`")
 
 @st.cache_data
 def get_synonyms_and_translations(target_word,num_synonyms,context_topics,pos_tag,input_language,selected_langs,is_phrase):
@@ -180,12 +178,17 @@ if search_button:
             IS_PHRASE = True
         else:
             IS_PHRASE = False
+        #Detect language of input keyword
+        input_language = detect_language(target_word)
+        if input_language not in languages:
+            input_language = 'en'
+        print("Detected Language:" + input_language)
         st.session_state['final_data'] = get_synonyms_and_translations(target_word,num_synonyms,context_topics,pos_tag,input_language,filter_langs,IS_PHRASE)
         
         st.session_state['search_run'] = True      
     except ValueError as e:
         st.session_state['search_run'] = False
-        # st.error(f"Validation Error: {e}")
+        st.error(f"Validation Error: {e}")
 
 if st.session_state['search_run']:
     st.subheader("Historical Date Filter")
@@ -206,3 +209,18 @@ if st.session_state['search_run']:
         time_chart = create_timeseries(st.session_state['final_data'])
         st.plotly_chart(time_chart, use_container_width=True)
 
+    with col_chart_right:
+        st.markdown(
+            """
+            <h3 style='text-align: center; font-size: 20px;'>
+                Terms by Max Frequency and Language
+            </h3>
+            """,
+            unsafe_allow_html=True
+        )
+        
+        # Call the new Plotly-based word cloud function
+        word_cloud_fig = create_word_cloud(st.session_state['final_data'],year_range=year_range)
+        
+        # Display the Plotly figure, which now has native hover!
+        st.plotly_chart(word_cloud_fig, use_container_width=True)

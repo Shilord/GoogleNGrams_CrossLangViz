@@ -8,8 +8,15 @@ from streamlit_folium import st_folium
 import folium
 from assets.world_map_css import *
 import plotly.graph_objects as go
-#Add a function for detecting language of input keyword 
+import detectlanguage
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+import io
+#Add to secrets
+detectlanguage.configuration.api_key = "2f804e5b6f76b1bacb52d2ad6667f374"
 
+# MIN_YEAR = 1600
+# MAX_YEAR = 2022
 
 languages = ['en', 'es', 'fr', 'de', 'it', 'ru', 'zh-CN', 'iw'] # list of languages used
 NGRAM_API_URL = "https://books.google.com/ngrams/json" # API endpoint
@@ -32,6 +39,21 @@ lang_to_lang_translation = {'English':'en',
                             'Italian':'it',
                             'Russian':'ru', 
                             'Spanish':'es'}
+
+LANGUAGE_COLORS_MAP = {
+    'English': 'darkblue',
+    'Español': 'red',
+    'Français': 'blue',
+    'Deutsch': 'purple',
+    'Italiano': 'orange',
+    'Русский': 'cyan',
+    '中文': 'green',
+    'עִברִית': 'olive'
+}
+#Detect language of input word
+def detect_language(word):
+    return detectlanguage.detect_code(word)
+
 # sets parameters for API call
 def set_params(word, corpus):
     params = {'content': word,
@@ -68,6 +90,7 @@ def get_frequency(df):
             else:
                 freq = [0] * len(years)
         else:
+            print("Translation API not working")
             freq = [0] * len(years)
         data = pd.concat([data, pd.DataFrame({'word': df['word'][i], 
                                               'language' : df['language'][i],
@@ -441,4 +464,114 @@ def create_timeseries(final_df):
         height=600 # Good height for viewing
     )
 
+    return fig
+
+def color_func(word, font_size, position, orientation, random_state=None, **kwargs):
+    """Assigns color based on the word's assigned language, which is stored in kwargs."""
+    language = kwargs.get('language', 'English') # Default to English if not found
+    return LANGUAGE_COLORS_MAP.get(language, 'gray') # Default to gray if language not in map
+
+def create_word_cloud(final_df,year_range):
+    
+    lang_code_to_display = {
+        'en': 'English', 'ru': 'Русский', 'fr': 'Français', 
+        'zh': '中文', 'iw': 'עִברִית', 'es': 'Español', 
+        'it': 'Italiano', 'de': 'Deutsch'
+    }
+    
+    def get_empty_fig_layout():
+        fig = go.Figure()
+        fig.update_layout(
+            height=600, 
+            template="plotly_dark", 
+            plot_bgcolor='rgba(0,0,0,0)', 
+            paper_bgcolor='rgba(0,0,0,0)',
+            xaxis=dict(visible=False), 
+            yaxis=dict(visible=False)
+        )
+        return fig
+
+    if final_df.empty:
+        return get_empty_fig_layout()
+    
+    df = final_df.copy()
+    df['display_language'] = df['language'].map(lambda x: lang_code_to_display.get(x, x))
+    df = df.loc[df['year']==year_range]
+
+    word_freq_max = df.groupby(['word', 'display_language']).agg(
+        max_frequency=('frequency', 'max')
+    ).reset_index()
+
+    word_freq_max = word_freq_max[word_freq_max['max_frequency'] > 1e-9]
+
+    word_to_language_map = word_freq_max.set_index('word')['display_language'].to_dict()
+    freq_dict = word_freq_max.set_index('word')['max_frequency'].to_dict()
+
+    if not freq_dict:
+        fig = get_empty_fig_layout()
+        fig.update_layout(
+            annotations=[
+                dict(text="No words found with a frequency greater than 0.",
+                     xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
+                     font=dict(size=16, color="white"))
+            ]
+        )
+        return fig
+
+    wc = WordCloud(
+        width=800, 
+        height=600, 
+        background_color='black', 
+        max_words=100,
+        normalize_plurals=False,
+        random_state=42, 
+        max_font_size=150 # Caps font size to prevent overlap
+    ).generate_from_frequencies(freq_dict)
+    
+    fig = go.Figure()
+
+    for (word, freq), font_size, position, orientation, color_ignored in wc.layout_:
+        x, y = position
+        language = word_to_language_map.get(word, 'English')
+        plot_color = LANGUAGE_COLORS_MAP.get(language, 'gray')
+        
+        hover_data = f"<b>Word:</b> {word}<br><b>Language:</b> {language}<br><b>Max Freq:</b> {freq:.6e}"
+        
+        # Hitbox size based on font size
+        marker_size = font_size * 1.5 
+
+        fig.add_trace(go.Scatter(
+            x=[x], 
+            y=[-y],
+            text=[word],
+            mode="text+markers", 
+            name=word,
+            showlegend=False,
+            
+            textfont=dict(
+                size=font_size, 
+                color=plot_color, 
+                family='Arial'
+            ),
+            
+            marker=dict(
+                size=marker_size,  
+                opacity=0.0,       
+                symbol='square'    
+            ),
+            
+            hovertext=hover_data,
+            hoverinfo="text",
+        ))
+
+    fig.update_layout(
+        template="plotly_dark",
+        xaxis=dict(visible=False, fixedrange=True, scaleanchor="y", scaleratio=1), 
+        yaxis=dict(visible=False, fixedrange=True),
+        plot_bgcolor='rgba(0,0,0,0)', 
+        paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=10, r=10, t=50, b=10),
+        height=600 
+    )
+    
     return fig

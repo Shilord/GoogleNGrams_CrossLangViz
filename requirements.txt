@@ -7,3 +7,4 @@ deep-translator
 folium
 geopandas
 streamlit-folium
+detectlanguage
