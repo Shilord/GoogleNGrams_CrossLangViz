@@ -3,3 +3,5 @@ lid.176.bin
 __pycache__
 assets/__pycache__
 dataviz
+streamlit_app2.py
+.DS_Store

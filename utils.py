@@ -12,53 +12,57 @@ import detectlanguage
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import io
+
+languages = ['English', 'Chinese', 'French', 'German', 'Italian', 'Russian', 'Spanish']
 #Add to secrets
 detectlanguage.configuration.api_key = "2f804e5b6f76b1bacb52d2ad6667f374"
 
-# MIN_YEAR = 1600
-# MAX_YEAR = 2022
+MIN_YEAR = 1600
+MAX_YEAR = 2022
 
-languages = ['en', 'es', 'fr', 'de', 'it', 'ru', 'zh-CN'] # list of languages used
 NGRAM_API_URL = "https://books.google.com/ngrams/json" # API endpoint
 
 lang_code_to_display = {
-    'en': 'English',
-    'es': 'Español',
-    'fr': 'Français',
-    'de': 'Deutsch',
-    'it': 'Italiano',
-    'ru': 'Русский',
-    'zh': '中文',
-    'iw': 'עִברִית'
-}
+        'en': 'English', 'ru': 'Russian', 'fr': 'French', 
+        'zh': 'Chinese', 'es': 'Spanish', 
+        'it': 'Italian', 'de': 'German'
+    }
 lang_to_lang_translation = {'English':'en', 
                             'Chinese': 'zh-CN', 
                             'French':'fr', 
-                            'German':'de',
-                            'Hebrew':'iw', 
+                            'German':'de', 
                             'Italian':'it',
                             'Russian':'ru', 
                             'Spanish':'es'}
 
 LANGUAGE_COLORS_MAP = {
-    'English': 'yellow',
-    'Español': 'red',
-    'Français': 'blue',
-    'Deutsch': 'purple',
-    'Italiano': 'orange',
-    'Русский': 'cyan',
-    '中文': 'green',
-    'עִברִית': 'olive'
+    'English': '#F4D03F',   # Soft Gold
+    'Spanish': '#FF6B6B',   # Pastel Coral Red
+    'French':  '#54A0FF',   # Sky Blue (High contrast against dark bg)
+    'German':  '#9B59B6',   # Amethyst
+    'Italian': '#FF9F43',   # Muted Orange
+    'Russian': '#00D2D3',   # Turquoise
+    'Chinese': '#2ECC71',   # Emerald Green
 }
+
+lang_to_translation = {'English':'English', 
+                            'Chinese': '中文', 
+                            'French':'Français', 
+                            'German':'Deutsch', 
+                            'Italian':'Italiano',
+                            'Russian':'Русский', 
+                            'Spanish':'Español'}
+
+
 #Detect language of input word
 def detect_language(word):
     return detectlanguage.detect_code(word)
 
 # sets parameters for API call
-def set_params(word, corpus):
+def set_params(word, corpus, min_year, max_year):
     params = {'content': word,
-              'year_start': 1500,
-              'year_end': 2022,
+              'year_start': min_year,
+              'year_end': max_year,
               'corpus': corpus,
               'smoothing': 0,
               'case_insensitive': 'on'}
@@ -79,24 +83,41 @@ def get_languages(input, input_lang, langs_selected):
 
 # gets frequency data from google ngram API
 def get_frequency(df):
-    years = list(range(1500, 2023))
-    data = pd.DataFrame()
+    years = list(range(MIN_YEAR, MAX_YEAR + 1))
+    expected_len = len(years)
+    all_data_frames = []
+
     for i in range(len(df)):
-        response = requests.get(NGRAM_API_URL, params = set_params(df['word'][i], df['language'][i],), timeout = 30)
+        freq = []
+        response = requests.get(NGRAM_API_URL, params = set_params(df['word'][i], df['language'][i],MIN_YEAR,MAX_YEAR), timeout = 30)
         if response.status_code == 200:
             x = response.json()
             if x:
                 freq = x[0]['timeseries']
             else:
-                freq = [0] * len(years)
-        else:
-            print("Translation API not working")
-            freq = [0] * len(years)
-        data = pd.concat([data, pd.DataFrame({'word': df['word'][i], 
-                                              'language' : df['language'][i],
-                                              'year' : years, 
-                                              'frequency' : freq})], ignore_index = True)
-    return data
+                print(f"API Error for {df['word'][i]}: Status {response.status_code}")
+
+        current_len = len(freq)
+        if current_len == 0:
+            freq = [0] * expected_len
+        elif current_len < expected_len:
+            # Pad the end with zeros if API returned incomplete data
+            freq = freq + ([0] * (expected_len - current_len))
+        elif current_len > expected_len:
+            # Slice if API returned too much data
+            freq = freq[:expected_len]
+        temp_df = pd.DataFrame({
+            'word': df['word'][i],
+            'language': df['language'][i],
+            'year': years,
+            'frequency': freq
+        })
+        all_data_frames.append(temp_df)
+
+    if all_data_frames:
+        return pd.concat(all_data_frames, ignore_index=True)
+    else:
+        return pd.DataFrame()
 
 # main function to run (combines above functions)
 def get_translations(word, input_lang, langs_needed):
@@ -198,7 +219,7 @@ def create_frequency_map(world_map, final_df, year):
     ]
     
     # Create display_name column
-    freq_year['display_name'] = freq_year['language'].map(lambda x: lang_code_to_display[x])
+    freq_year['display_name'] = freq_year['language'].map(lambda x: lang_to_translation[lang_code_to_display[x]])
     
     # Aggregate by language: sum frequencies and collect all words
     freq_lookup_df = freq_year.groupby('display_name').agg({
@@ -330,12 +351,6 @@ def create_timeseries(final_df):
         print("DataFrame is empty.")
         return go.Figure()
 
-    # Map language codes to display names (Update this dictionary as needed)
-    lang_code_to_display = {
-        'en': 'English', 'ru': 'Russian', 'fr': 'French', 
-        'zh': 'Chinese', 'iw': 'Hebrew', 'es': 'Spanish', 
-        'it': 'Italian', 'de': 'German'
-    }
     
     df = final_df.copy()
     df['display_language'] = df['language'].map(lambda x: lang_code_to_display.get(x, x))
@@ -366,10 +381,15 @@ def create_timeseries(final_df):
         
         is_synonym = group['is_synonym'].iloc[0]
         language = group['display_language'].iloc[0]
-        
-        # Style: Main words are solid/thick; Synonyms are dashed/thinner
-        line_style = dict(width=3) if is_synonym == 0 else dict(width=1.5, dash='dot')
-        opacity = 1.0 if is_synonym == 0 else 0.7
+
+        trace_color = LANGUAGE_COLORS_MAP.get(language, 'white')
+
+        if is_synonym == 0:
+            line_style = dict(width=3, color=trace_color)
+            opacity = 1.0
+        else:
+            line_style = dict(width=1.5, dash='dot', color=trace_color)
+            opacity = 0.7
 
         fig.add_trace(go.Scatter(
             x=group['year'],
@@ -480,14 +500,9 @@ def create_word_cloud(final_df, year_range):
         st.info("No data available to generate word cloud.")
         return None, pd.DataFrame()
 
-    lang_code_to_display = {
-        'en': 'English', 'ru': 'Русский', 'fr': 'Français', 
-        'zh': '中文', 'iw': 'עִברִית', 'es': 'Español', 
-        'it': 'Italiano', 'de': 'Deutsch'
-    }
-    
+    lang_to_lang_translation_inverse = {v:k for k,v in lang_to_lang_translation.items()}
     df = final_df.copy()
-    df['display_language'] = df['language'].map(lambda x: lang_code_to_display.get(x, x))
+    df['display_language'] = df['language'].map(lambda x: lang_to_lang_translation_inverse.get(x, x))
     df = df.loc[df['year']==year_range]
 
     word_freq_max = df.groupby(['word', 'display_language']).agg(
@@ -512,6 +527,7 @@ def create_word_cloud(final_df, year_range):
 
     
     wc = WordCloud(
+        font_path = 'assets/NotoSansSC-Regular.ttf',
         width=800, 
         height=500, # Height matches the timeseries plot (500px)
         background_color='#0d1118', # Crucial step 1: Tell WordCloud not to draw a background
@@ -541,4 +557,173 @@ def create_word_cloud(final_df, year_range):
 
     # Return the image buffer for display and the DataFrame for the table
     return buf
+
+
+def create_frequency_map_plotly(world_map, final_df, year):
+    """
+    Generates a clean, professional world map colored by relative frequency using Plotly.
+    """
+    
+    if final_df.empty:
+        st.info("Press 'Run Linguistic Search' to generate the initial visualizations.")
+        return None
+
+    freq_year = final_df[final_df['year'] == year].copy()
+    
+    if freq_year.empty:
+        st.warning(f"No data available for year {year}")
+        return None
+    
+    target_languages = [
+        'English', 'Español', 'Français', 'Deutsch', 
+        'Italiano', 'Русский', '中文', 'עִברִית'
+    ]
+    
+    # Create display_name column
+    freq_year['display_name'] = freq_year['language'].map(lambda x: lang_to_translation[lang_code_to_display[x]])
+    
+    # Aggregate by language: sum frequencies and collect all words
+    freq_lookup_df = freq_year.groupby('display_name').agg({
+        'frequency': 'sum',
+        'word': lambda words: list(words.unique()),
+        'is_synonym': 'first'
+    }).reset_index()
+    
+    # Create formatted word-frequency pairs for display
+    word_freq_display = {}
+    for lang in freq_lookup_df['display_name'].unique():
+        lang_data = freq_year[freq_year['display_name'] == lang]
+        word_freqs = lang_data.groupby('word')['frequency'].sum().to_dict()
+        sorted_word_freqs = sorted(word_freqs.items(), key=lambda x: x[1], reverse=True)
+        formatted = ', '.join([f"{word} ({freq:.6f})" for word, freq in sorted_word_freqs])
+        word_freq_display[lang] = formatted
+    
+    # Create lookup dictionaries
+    freq_lookup = freq_lookup_df.set_index('display_name')['frequency'].to_dict()
+    words_lookup = {lang: word_freq_display[lang] for lang in word_freq_display}
+    
+    # Prepare choices for np.select
+    frequency_choices = [
+        freq_lookup.get(lang, np.nan)
+        for lang in target_languages
+    ]
+    word_display_choices = [
+        words_lookup.get(lang, 'No data')
+        for lang in target_languages
+    ]
+    
+    # Create boolean masks for each language
+    langs = [
+        (world_map['Primary Language (based on 2015)'] == lang)
+        for lang in target_languages
+    ]
+    
+    # Assign values to world_map
+    world_map['Frequency'] = np.select(langs, frequency_choices, default=np.nan)
+    world_map['Words_Display'] = np.select(langs, word_display_choices, default='No data')
+    world_map['Language'] = world_map['Primary Language (based on 2015)']
+    
+    # Format frequency for display
+    world_map['Frequency_Display'] = world_map['Frequency'].apply(
+        lambda x: f"{x:.6f}" if pd.notna(x) else "No data"
+    )
+    
+    # Split into supported and unsupported languages
+    map_supported = world_map[world_map['Frequency'].notna()].copy()
+    map_unsupported = world_map[world_map['Frequency'].isna()].copy()
+    map_unsupported['Frequency'] = 0
+    
+    # Create the plotly figure
+    fig = go.Figure()
+    
+    # Add choropleth for supported languages
+    fig.add_trace(go.Choropleth(
+        locationmode='country names',
+        locations=map_supported['Country'],
+        z=map_supported['Frequency'],
+        colorscale='Viridis',
+        reversescale=False,
+        autocolorscale=False,
+        marker_line_color='black',
+        marker_line_width=1.5,
+        colorbar=dict(
+            title='Relative Frequency',
+            title_side='top',
+            xanchor='left',
+            x=1.02,
+            y=0.5,
+            len=0.7,
+            thickness=15,
+        ),
+        customdata=list(zip(
+            map_supported['Words_Display'],
+            map_supported['Language'],
+            map_supported['Frequency_Display']
+        )),
+        hovertemplate='<b>Country:</b> %{location}<br>' 
+            '<b>Language:</b> %{customdata[1]}<br>' 
+            '<b>Words:</b> %{customdata[0]}<br>' 
+            '<b>Frequency:</b> %{customdata[2]}<extra></extra>',
+        name='Supported Languages'
+    ))
+    
+    # Add choropleth for unsupported languages
+    fig.add_trace(go.Choropleth(
+        locationmode='country names',
+        locations=map_unsupported['Country'],
+        z=map_unsupported['Frequency'],
+        showscale=False,
+        colorscale=[[0, 'lightgrey'], [1, 'lightgrey']],
+        marker_line_color='black',
+        marker_line_width=1.5,
+        customdata=list(zip(
+            map_unsupported['Words_Display'],
+            map_unsupported['Language']
+        )),
+        hovertemplate='<b>Country:</b> %{location}<br>' 
+            '<b>Language:</b> %{customdata[1]}<br>' 
+            '<b>Words:</b> %{customdata[0]}<br>' 
+            '<b>Frequency:</b> Unsupported Language<extra></extra>',
+        name='Unsupported Languages'
+    ))
+    
+    # Update layout
+    fig.update_layout(
+        title={
+            'text': f'World Map Ngram Frequency - Year {year}',
+            'x': 0.5,
+            'xanchor': 'center',
+            'y': 0.95,
+            'xref': 'paper',
+            'font': {'size': 20, 'color': 'white'}
+        },
+        autosize=True,
+        geo=dict(
+            scope='world',
+            showframe=False,
+            showcoastlines=False,
+            showlakes=False,
+            projection_type='natural earth',
+            projection_scale=1.1, 
+            bgcolor='#0e1117',
+            showland=True,
+            landcolor='#262730'
+        ),
+        annotations=[dict(
+            x=0.5,
+            y=-0.05,
+            xref='paper',
+            yref='paper',
+            text='Source: <a href="https://resourcewatch.org/data/explore/soc_071_world_languages" style="color: #1f77b4;">CIA World Factbook (2015)</a>',
+            showarrow=False,
+            font=dict(color='white', size=10)
+        )],      
+        font=dict(color='white'),
+        paper_bgcolor='#0e1117',
+        height=600,
+        margin=dict(l=0, r=0, t=30, b=10, pad = 0),
+        showlegend=False
+    )
+    
+    return fig
 
