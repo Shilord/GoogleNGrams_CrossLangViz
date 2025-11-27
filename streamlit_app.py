@@ -218,9 +218,6 @@ if st.session_state['search_run']:
             """,
             unsafe_allow_html=True
         )
-        
-        # Call the new Plotly-based word cloud function
-        word_cloud_fig = create_word_cloud(st.session_state['final_data'],year_range=year_range)
-        
-        # Display the Plotly figure, which now has native hover!
-        st.plotly_chart(word_cloud_fig, use_container_width=True)
+        word_cloud_image_buffer = create_word_cloud(st.session_state['final_data'], year_range=year_range)
+        if word_cloud_image_buffer:
+            st.image(word_cloud_image_buffer, use_container_width=True)

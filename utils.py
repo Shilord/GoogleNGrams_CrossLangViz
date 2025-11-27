@@ -18,7 +18,7 @@ detectlanguage.configuration.api_key = "2f804e5b6f76b1bacb52d2ad6667f374"
 # MIN_YEAR = 1600
 # MAX_YEAR = 2022
 
-languages = ['en', 'es', 'fr', 'de', 'it', 'ru', 'zh-CN', 'iw'] # list of languages used
+languages = ['en', 'es', 'fr', 'de', 'it', 'ru', 'zh-CN'] # list of languages used
 NGRAM_API_URL = "https://books.google.com/ngrams/json" # API endpoint
 
 lang_code_to_display = {
@@ -41,7 +41,7 @@ lang_to_lang_translation = {'English':'en',
                             'Spanish':'es'}
 
 LANGUAGE_COLORS_MAP = {
-    'English': 'darkblue',
+    'English': 'yellow',
     'Español': 'red',
     'Français': 'blue',
     'Deutsch': 'purple',
@@ -471,28 +471,20 @@ def color_func(word, font_size, position, orientation, random_state=None, **kwar
     language = kwargs.get('language', 'English') # Default to English if not found
     return LANGUAGE_COLORS_MAP.get(language, 'gray') # Default to gray if language not in map
 
-def create_word_cloud(final_df,year_range):
-    
+def create_word_cloud(final_df, year_range):
+    """
+    Generates a language-colored WordCloud with a transparent background
+    and adjusted figure size to match the timeseries plot.
+    """
+    if final_df.empty:
+        st.info("No data available to generate word cloud.")
+        return None, pd.DataFrame()
+
     lang_code_to_display = {
         'en': 'English', 'ru': 'Русский', 'fr': 'Français', 
         'zh': '中文', 'iw': 'עִברִית', 'es': 'Español', 
         'it': 'Italiano', 'de': 'Deutsch'
     }
-    
-    def get_empty_fig_layout():
-        fig = go.Figure()
-        fig.update_layout(
-            height=600, 
-            template="plotly_dark", 
-            plot_bgcolor='rgba(0,0,0,0)', 
-            paper_bgcolor='rgba(0,0,0,0)',
-            xaxis=dict(visible=False), 
-            yaxis=dict(visible=False)
-        )
-        return fig
-
-    if final_df.empty:
-        return get_empty_fig_layout()
     
     df = final_df.copy()
     df['display_language'] = df['language'].map(lambda x: lang_code_to_display.get(x, x))
@@ -503,75 +495,50 @@ def create_word_cloud(final_df,year_range):
     ).reset_index()
 
     word_freq_max = word_freq_max[word_freq_max['max_frequency'] > 1e-9]
+    
+    data_for_display = word_freq_max.sort_values(by='max_frequency', ascending=False).head(20).copy()
+    data_for_display['Color'] = data_for_display['display_language'].map(lambda x: LANGUAGE_COLORS_MAP.get(x, 'gray'))
+    data_for_display = data_for_display.rename(columns={'word': 'Word', 'max_frequency': 'Max Frequency', 'display_language': 'Language'})
+    data_for_display['Max Frequency'] = data_for_display['Max Frequency'].apply(lambda x: f"{x:.6e}")
+    data_for_display = data_for_display[['Word', 'Language', 'Max Frequency', 'Color']]
 
     word_to_language_map = word_freq_max.set_index('word')['display_language'].to_dict()
     freq_dict = word_freq_max.set_index('word')['max_frequency'].to_dict()
 
-    if not freq_dict:
-        fig = get_empty_fig_layout()
-        fig.update_layout(
-            annotations=[
-                dict(text="No words found with a frequency greater than 0.",
-                     xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
-                     font=dict(size=16, color="white"))
-            ]
-        )
-        return fig
+    
+    def custom_color_func(word, font_size, position, orientation, random_state=None, **kwargs):
+        language = word_to_language_map.get(word, 'English') 
+        return LANGUAGE_COLORS_MAP.get(language, 'gray')
 
+    
     wc = WordCloud(
         width=800, 
-        height=600, 
-        background_color='black', 
+        height=500, # Height matches the timeseries plot (500px)
+        background_color='#0d1118', # Crucial step 1: Tell WordCloud not to draw a background
         max_words=100,
-        normalize_plurals=False,
-        random_state=42, 
-        max_font_size=150 # Caps font size to prevent overlap
+        normalize_plurals=False
     ).generate_from_frequencies(freq_dict)
     
-    fig = go.Figure()
+    wc.recolor(color_func=custom_color_func)
 
-    for (word, freq), font_size, position, orientation, color_ignored in wc.layout_:
-        x, y = position
-        language = word_to_language_map.get(word, 'English')
-        plot_color = LANGUAGE_COLORS_MAP.get(language, 'gray')
-        
-        hover_data = f"<b>Word:</b> {word}<br><b>Language:</b> {language}<br><b>Max Freq:</b> {freq:.6e}"
-        
-        # Hitbox size based on font size
-        marker_size = font_size * 1.5 
-
-        fig.add_trace(go.Scatter(
-            x=[x], 
-            y=[-y],
-            text=[word],
-            mode="text+markers", 
-            name=word,
-            showlegend=False,
-            
-            textfont=dict(
-                size=font_size, 
-                color=plot_color, 
-                family='Arial'
-            ),
-            
-            marker=dict(
-                size=marker_size,  
-                opacity=0.0,       
-                symbol='square'    
-            ),
-            
-            hovertext=hover_data,
-            hoverinfo="text",
-        ))
-
-    fig.update_layout(
-        template="plotly_dark",
-        xaxis=dict(visible=False, fixedrange=True, scaleanchor="y", scaleratio=1), 
-        yaxis=dict(visible=False, fixedrange=True),
-        plot_bgcolor='rgba(0,0,0,0)', 
-        paper_bgcolor='rgba(0,0,0,0)',
-        margin=dict(l=10, r=10, t=50, b=10),
-        height=600 
-    )
+    fig, ax = plt.subplots(figsize=(10, 6.25)) 
     
-    return fig
+    ax.imshow(wc, interpolation='bilinear')
+    ax.axis('off')
+    
+    fig.patch.set_facecolor('none')
+    fig.patch.set_alpha(0.0)
+    
+    ax.patch.set_facecolor('none')
+    ax.patch.set_alpha(0.0)
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight', transparent=True) 
+    plt.close(fig) 
+    
+    # Reset Matplotlib style to default
+    plt.style.use('default') 
+
+    # Return the image buffer for display and the DataFrame for the table
+    return buf
+
