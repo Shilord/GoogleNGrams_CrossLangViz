@@ -48,6 +48,20 @@ def show_dashboard():
 
     input_language = None
 
+    if 'app_initialized' not in st.session_state:
+        default_df = pd.read_csv("example_data.csv") 
+        st.session_state['final_data'] = default_df
+        st.session_state['search_run'] = True 
+        st.session_state.target_word = "example" 
+        st.session_state.input_language = "English"
+        st.session_state.selected_languages = ['English', 'Chinese', 'French', 'German', 'Italian', 'Russian', 'Spanish']
+        st.session_state.synonyms_choice = "Yes"
+        st.session_state.num_synonyms = 3
+        st.session_state.pos_tag = "Noun"
+        st.session_state.context_topics = ""
+        st.session_state['is_comparison'] = False
+        st.session_state['is_phrase']=False
+
     if 'search_run' not in st.session_state:
         st.session_state['search_run'] = False
     if 'final_data' not in st.session_state:
@@ -69,7 +83,9 @@ def show_dashboard():
     if 'synonyms_choice' not in st.session_state:
         st.session_state.synonyms_choice = "No"
     if 'num_synonyms' not in st.session_state:
-        st.session_state.num_synonyms = 5
+        st.session_state.num_synonyms = 3
+    if 'app_initialized' not in st.session_state:
+        st.session_state.app_initialized = 1
 
     #Build world map
     @st.cache_resource
@@ -226,8 +242,6 @@ def show_dashboard():
             # When collapsed, set search_button to False
             search_button = False
 
-    # Now you can access all values from session state anywhere in your code
-    # Even when the controls are collapsed:
     target_word = st.session_state.target_word
     input_language = st.session_state.input_language
     pos_tag = st.session_state.pos_tag
@@ -235,13 +249,6 @@ def show_dashboard():
     filter_langs = st.session_state.get('filter_langs', languages)
     synonyms_choice = st.session_state.synonyms_choice
     num_synonyms = st.session_state.num_synonyms if st.session_state.synonyms_choice == "Yes" else 0
-
-    # st.markdown("---")
-    # st.write(f"**Current Search Word:** `{target_word}`")
-    # st.write(f"**Context Topics:** `{context_topics or 'None'}` | **POS Tag:** `{pos_tag}`")
-    # st.write(f"**Languages:** `{', '.join(selected_langs)}`")
-    # st.write(f"**Include Synonyms:** `{synonyms_choice}` (Count: `{num_synonyms}`)")
-    # # st.write(f"**Target Year:** `{year_range}`")
 
     @st.cache_data
     def get_synonyms_and_translations(target_word,num_synonyms,context_topics,pos_tag,input_language,selected_langs,is_phrase):
@@ -271,63 +278,184 @@ def show_dashboard():
         return final_df
     if search_button:
         try:
-            if len(target_word.strip().split(' '))>1:
-                IS_PHRASE = True
+            if len(target_word.strip().split(','))>1:
+                st.session_state['is_phrase'] = False
+                st.session_state['is_comparison'] = True
+            elif len(target_word.strip().split(' '))>1:
+                st.session_state['is_phrase'] = True
+                st.session_state['is_comparison'] = False
             else:
-                IS_PHRASE = False
+                st.session_state['is_phrase'] = False
+                st.session_state['is_comparison'] = False
+
             #Detect language of input keyword
-            if input_language==None:
-                input_language = detect_language(target_word)
-            else: 
-                #Convert input language from format "English" to 'en'
-                lang_code_to_display_inverse = {v:k for k,v in lang_code_to_display.items()}
-                input_language = lang_code_to_display_inverse[input_language]
+            if st.session_state['is_comparison']==False:
+                if input_language==None:
+                    input_language = detect_language(target_word)
+                else: 
+                    #Convert input language from format "English" to 'en'
+                    lang_code_to_display_inverse = {v:k for k,v in lang_code_to_display.items()}
+                    input_language = lang_code_to_display_inverse[input_language]
+            else:
+                input_language = 'en'
             if input_language not in list(lang_code_to_display.keys()):
                 input_language = 'en'
             print("Detected Language:" + input_language)
-            with st.spinner('Running linguistic search...'):
-                st.session_state['final_data'] = get_synonyms_and_translations(target_word,num_synonyms,context_topics,pos_tag,input_language,filter_langs,IS_PHRASE)
-            
+
+            if st.session_state['is_comparison']==False:
+                with st.spinner('Running linguistic search...'):
+                    st.session_state['final_data'] = get_synonyms_and_translations(target_word,num_synonyms,context_topics,pos_tag,input_language,filter_langs,st.session_state['is_phrase'])
+            else: 
+                target_words =  [i.strip() for i in target_word.strip().split(',')]
+                with st.spinner('Running linguistic search...'):
+                    df = pd.DataFrame()
+                    for word in target_words:
+                        df = pd.concat([df,get_synonyms_and_translations(word,num_synonyms,None,None,input_language,filter_langs,st.session_state['is_phrase'])],ignore_index=True)
+                    st.session_state['final_data'] = df
+
             st.session_state['search_run'] = True      
         except ValueError as e:
             st.session_state['search_run'] = False
             st.error(f"Validation Error: {e}")
 
     if st.session_state['search_run']:
-        st.subheader("Historical Date Filter")
-        year_range = st.slider(
-            "Select Target Year",
-            min_value=MIN_YEAR,
-            max_value=MAX_YEAR,
-            value=2000, 
-            step=1,
-            help="Select a single specific year for the corpus analysis."
-        )
-        # world_map = empty_map.copy(deep=True)
-        # create_frequency_map(world_map, st.session_state['final_data'], year_range)
-
-        world_map = empty_map.copy(deep=True)
-        fig = create_frequency_map_plotly(world_map, st.session_state['final_data'], year_range)
-        if fig:
-            st.plotly_chart(fig, use_container_width=True,config={'displayModeBar': False})
-
-        col_chart_left, col_chart_right = st.columns([1, 1])
-
-        with col_chart_left:
-            st.text("Bar Graph here")
-
-        with col_chart_right:
-            st.markdown(
-                """
-                <h3 style='text-align: center; font-size: 20px;'>
-                    Terms by Max Frequency and Language
-                </h3>
-                """,
-                unsafe_allow_html=True
+        if st.session_state['is_comparison']==False:
+            st.subheader("Historical Date Filter")
+            year_range = st.slider(
+                "Select Target Year",
+                min_value=MIN_YEAR,
+                max_value=MAX_YEAR,
+                value=2000, 
+                step=1,
+                help="Select a single specific year for the corpus analysis."
             )
-            word_cloud_image_buffer = create_word_cloud(st.session_state['final_data'], year_range=year_range)
-            if word_cloud_image_buffer:
-                st.image(word_cloud_image_buffer, use_container_width=True)
+            # world_map = empty_map.copy(deep=True)
+            # create_frequency_map(world_map, st.session_state['final_data'], year_range)
+
+            world_map = empty_map.copy(deep=True)
+            _,col1,_ = st.columns([0.3,0.6,0.1])
+            with col1: 
+                st.subheader(f"World Map Ngram Frequency - Year {year_range}",help = """
+                            Explore how your search term varies across countries and languages 
+            
+        1. What you're seeing:
+        This map shows how frequently your search term (and its translations and synonyms) appear in books from different countries, based on each country's primary language.
         
+        2. Color Intensity:
+        - Darker colors = Your word appears LESS frequently in that language
+        - Lighter colors = Your word appears MORE frequently
+        - Grey countries = Language not currently supported in our analysis
+        
+        3. How to interact:
+        - Hover over any country** to see:
+        - The country name and primary language
+        - All translated words/synonyms for that language
+        - Exact frequency values
+        - Use the year slider above to see how word usage changes over time
+        
+        Pro tip: Countries with the same primary language will have the same 
+        color. For example, all Spanish-speaking countries share the same frequency 
+        data for Spanish translations of your word.
+        
+        What is Relative Frequency?
+        This is the number of times your word appears per million words in books 
+        from that language during the selected year.
+        """ )
+            fig = create_frequency_map_plotly(world_map, st.session_state['final_data'], year_range)
+            if fig:
+                st.plotly_chart(fig, use_container_width=True,config={'displayModeBar': False})
+
+            col_chart_left, col_chart_right = st.columns([1, 1])
+
+            with col_chart_left:
+                st.subheader(f"Top Words by Language - Year {year_range}", help = """
+                            Compare which translation or synonym is most popular in each language
+        What you're seeing:
+        This chart ranks the most frequently used words across all languages for the selected year. Each bar represents one word in one language.
+        
+        The bars show:
+        - Height = How frequently the word appears (higher = more common)
+        - Color = Which language the word belongs to
+        - Label = The actual word and its language
+        
+        Why this matters:
+        - See which languages use your concept most frequently
+        - Discover if synonyms are more popular than direct translations
+        - Compare cultural differences in word usage
+        
+        How to use it:
+        - Hover over bars to see exact frequency values
+        - Look for patterns: Do certain languages favor this word?
+        - Compare with the map to see regional patterns
+                            """ )
+                st.text("Bar Graph here")
+
+            with col_chart_right:
+                st.subheader(f"Word Cloud: Top Terms by Frequency - Year {year_range}", help = """
+                            Visual snapshot of the most popular words and their languages
+        What you're seeing:
+        A visual representation of words, where size and color tell you about each word's importance and language.
+        
+        Size matters:
+        - Bigger words = Used MORE frequently in books
+        - Smaller words = Used less frequently
+        - Only shows words that appeared at least once in the selected year
+        
+        Colors represent languages:
+        - 🟡 Yellow = English
+        - 🔴 Red = Spanish
+        - 🔵 Blue = French
+        - 🟣 Purple = German
+        - 🟠 Orange = Italian
+        - 🔷 Cyan = Russian
+        - 🟢 Green = Chinese
+        
+        What you can learn:
+        - Which words dominate? The biggest words are cultural favorites
+        - Language diversity: Many colors = your concept translates well
+        - Synonym popularity: If you included synonyms, see which alternatives are most common
+        
+        Why words appear multiple times:
+        If you included synonyms, you might see related words (like "happy," 
+        "joyful," "cheerful") all displayed together.
+
+                            """ )
+                word_cloud_image_buffer = create_word_cloud(st.session_state['final_data'], year_range=year_range)
+                if word_cloud_image_buffer:
+                    st.image(word_cloud_image_buffer, use_container_width=True)
+        
+        _,col2,_ = st.columns([0.3,0.6,0.1])
+        with col2: 
+            st.subheader(f"Word Frequency Over Time (smoothed)",help = """
+                         Track how word usage has evolved across centuries and languages
+        
+    What you're seeing:
+    This graph shows how frequently your search term appears in books 
+    over 422 years (1600-2022), with a separate line for each language 
+    and word variation.
+    
+    The lines represent:
+    - Solid lines = Your original search term in each language
+    - Dotted lines = Synonym variations (if you included them)
+    - Line color = Language (matches the legend and word cloud colors)
+    - Height (Y-axis) = Frequency (higher = more common)
+    
+    The data is smoothed:
+    We use a 5-year moving average to reduce noise and show clearer 
+    trends. This makes it easier to spot real patterns versus random spikes.
+    
+    Interactive features:
+    - Hover over lines** to see exact year and frequency
+    - Click legend items** to show/hide specific words
+    - Use the language filter dropdown to focus on one language
+    - Drag the range slider at the bottom to zoom into specific time periods
+    - Click and drag on the chart to pan left and right
+    
+    Pro tips:
+    - Compare synonyms to see if one term dominated over time
+    - Look for when different languages "discovered" the same concept
+    - Use the range slider to focus on specific historical periods
+    - Notice how books published in different eras preferred different terms
+    """ )
         time_chart = create_timeseries(st.session_state['final_data'])
         st.plotly_chart(time_chart, use_container_width=True)

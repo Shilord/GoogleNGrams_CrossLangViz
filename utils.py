@@ -53,6 +53,8 @@ lang_to_translation = {'English':'English',
                             'Russian':'Русский', 
                             'Spanish':'Español'}
 
+lang_to_translation_inverse = {v:k for k,v in lang_to_translation.items()}
+
 
 #Detect language of input word
 def detect_language(word):
@@ -449,16 +451,8 @@ def create_timeseries(final_df):
     # --- 5. Final Layout Polish (Dark Theme) ---
     fig.update_layout(
         template="plotly_dark", # Matches your screenshot's dark theme
-        title={
-            'text': "Word Frequency Over Time (Smoothed)",
-            'y':0.95,
-            'x':0.5,
-            'xanchor': 'center',
-            'yanchor': 'top'
-        },
         xaxis_title="Year",
         yaxis_title="Frequency (5-Year Moving Avg)",
-        
         # The Range Slider (The mini-graph at the bottom)
         xaxis=dict(
             rangeslider=dict(visible=True),
@@ -470,9 +464,9 @@ def create_timeseries(final_df):
         # Legend positioning
         legend=dict(
             yanchor="top",
-            y=0.99,
+            y=1,
             xanchor="right",
-            x=0.99,
+            x=1.2,
             bgcolor="rgba(0,0,0,0)" # Transparent legend
         ),
         
@@ -632,6 +626,8 @@ def create_frequency_map_plotly(world_map, final_df, year):
     map_supported = world_map[world_map['Frequency'].notna()].copy()
     map_unsupported = world_map[world_map['Frequency'].isna()].copy()
     map_unsupported['Frequency'] = 0
+
+    map_supported['Language'] = [lang_to_translation_inverse[i] for i in list(map_supported['Language'])]
     
     # Create the plotly figure
     fig = go.Figure()
@@ -684,19 +680,20 @@ def create_frequency_map_plotly(world_map, final_df, year):
             '<b>Language:</b> %{customdata[1]}<br>' 
             '<b>Words:</b> %{customdata[0]}<br>' 
             '<b>Frequency:</b> Unsupported Language<extra></extra>',
-        name='Unsupported Languages'
+        name='Unsupported Languages',
+        # hoverinfo='skip'
     ))
     
     # Update layout
     fig.update_layout(
-        title={
-            'text': f'World Map Ngram Frequency - Year {year}',
-            'x': 0.5,
-            'xanchor': 'center',
-            'y': 0.95,
-            'xref': 'paper',
-            'font': {'size': 20, 'color': 'white'}
-        },
+        # title={
+        #     'text': f'World Map Ngram Frequency - Year {year}',
+        #     'x': 0.5,
+        #     'xanchor': 'center',
+        #     'y': 0.95,
+        #     'xref': 'paper',
+        #     'font': {'size': 20, 'color': 'white'}
+        # },
         autosize=True,
         geo=dict(
             scope='world',
@@ -707,7 +704,9 @@ def create_frequency_map_plotly(world_map, final_df, year):
             projection_scale=1.1, 
             bgcolor='#0e1117',
             showland=True,
-            landcolor='#262730'
+            landcolor='#262730',
+            coastlinecolor='black',
+            coastlinewidth=1
         ),
         annotations=[dict(
             x=0.5,
@@ -722,7 +721,21 @@ def create_frequency_map_plotly(world_map, final_df, year):
         paper_bgcolor='#0e1117',
         height=600,
         margin=dict(l=0, r=0, t=30, b=10, pad = 0),
-        showlegend=False
+        showlegend=False,
+        hoverlabel=dict(
+            bgcolor="white",
+            font_size=12,
+            font_family="Arial"
+        )
+    )
+    fig.update_traces(
+        selector=dict(type='choropleth'),
+        hoverlabel=dict(
+            bgcolor="white",
+            font_size=14,
+            font_color="black",
+            bordercolor="black"
+        )
     )
     
     return fig

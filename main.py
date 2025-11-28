@@ -19,16 +19,17 @@ if 'final_data' not in st.session_state:
 # Sidebar navigation
 with st.sidebar:
     st.title("🌍 Navigation")
+    st.markdown("---")
     selected_tab = st.radio(
         "Select a page:",
-        ["📊 Dashboard", "🎯 Fun Facts", "📖 Instructions"],
+        ["📊📈 Dashboard", "🍿 Fun Facts", "📖 Instructions"],
         label_visibility="collapsed"
     )
 
 # Route to the selected tab
-if selected_tab == "📊 Dashboard":
+if selected_tab == "📊📈 Dashboard":
     show_dashboard()
-elif selected_tab == "🎯 Fun Facts":
+elif selected_tab == "🍿 Fun Facts":
     show_fun_facts()
 elif selected_tab == "📖 Instructions":
     show_instructions()
