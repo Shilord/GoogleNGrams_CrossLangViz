@@ -72,9 +72,10 @@ def get_languages_batch(input, input_lang):
             translator = GoogleTranslator(source = input_lang, target = lang)
             new_words = translator.translate_batch(input)
             for i in range(len(new_words)):
-                new_entry = pd.DataFrame({'word' : new_words[i].lower(),
-                                           'language' : lang}, index = [0])
-                df = pd.concat([df, new_entry], ignore_index = True)
+                if new_words[i].lower() not in df['word'].tolist():
+                    new_entry = pd.DataFrame({'word' : new_words[i].lower(),
+                                              'language' : lang}, index = [0])
+                    df = pd.concat([df, new_entry], ignore_index = True)
             df['language'] = df['language'].replace('zh-CN', 'zh')
     return df
 
