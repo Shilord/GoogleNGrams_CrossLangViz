@@ -20,7 +20,7 @@ def set_params(word, corpus):
 
 # function to get direct translations for words
 def get_languages(input, input_lang):
-    df = pd.DataFrame({'word' : input,
+    df = pd.DataFrame({'word' : input.lower(),
                        'language' : input_lang}, index = [0])
     for lang in languages:
         if lang != input_lang:
@@ -58,3 +58,26 @@ def get_df(word, input_lang):
 # detect language of input word usage
 def detect_language(word):
     return detectlanguage.detect_code(word)
+
+# batch translate
+def get_languages_batch(input, input_lang):
+    df = pd.DataFrame(column_names = ['word', 'language'])
+    for i in range(len(input)):
+        if input[i].lower() not in df['word'].tolist():
+            current = pd.DataFrame({'word' : input[i].lower(),
+                                    'language' : input_lang}, index = [0])
+            df = pd.concat([df, current], ignore_index = True)
+    for lang in languages:
+        if lang != input_lang:
+            translator = GoogleTranslator(source = input_lang, target = lang)
+            new_words = translator.translate_batch(input)
+            for i in range(len(new_words)):
+                new_entry = pd.DataFrame({'word' : new_words[i].lower(),
+                                           'language' : lang}, index = [0])
+                df = pd.concat([df, new_entry], ignore_index = True)
+            df['language'] = df['language'].replace('zh-CN', 'zh')
+    return df
+
+# main function for batch translate
+def get_df_batch(input, input_lang):
+    return get_frequency(get_languages_batch(input, input_lang))
