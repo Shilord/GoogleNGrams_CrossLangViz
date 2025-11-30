@@ -1,0 +1,30 @@
+Search Controls: 
+
+Title tooltip: 
+Start your query here.
+
+Search bar (not tooltip, just the ghost text): 
+Enter Word or Phrase (Ngram) Here
+
+Select Languages: Select which languages to be included in the analysis.
+
+Include synonyms: 
+Selecting yes may better capture the various meanings or context of your search term, whereas selecting no results in the singular most direct translation.
+__________________________
+Date slider:
+Select a year for analysis.
+__________________________
+World Map Ngram Frequency: 
+Explore how your search term's usage varies across countries and languages in this interactive map via color intensity. Hover over each country to see specifics like primary language, and move the date slider to compare trends over time. Note that the map is based on primary languages spoken by each country in 2015.
+__________________________
+Bar graph:
+Compare the popularity of each translation or synonym in different languages via this bar graph. Hover over each bar for exact values, and adjust the date slider to target your desired year.
+__________________________
+Word cloud:
+An alternative visualization to the bar graph, once more comparing the popularity of each translation or synonym in different languages. The larger the word or phrase, the more frequently it is used, while the color corresponds to the language. 
+__________________________
+Time series:
+See how often your input term, along with all translations and synonyms in other languages, is used over time in this interactive smoothed time series graph (5-year moving average to reduce noise). Hover over lines, show/hide entries by clicking in the legend, use the language filter dropdown, or drag the range slider at the bottom to select time frame. 
+__________________________
+Fun facts title: 
+Use the arrows at the bottom to scroll between quick visualizations that tell a fun story!
