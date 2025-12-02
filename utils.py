@@ -3,15 +3,14 @@ import numpy as np
 from deep_translator import GoogleTranslator
 import requests
 import streamlit as st
-#mport geopandas as gpd
-#from streamlit_folium import st_folium
-#import folium
 from assets.world_map_css import *
 import plotly.graph_objects as go
 import detectlanguage
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import io
+import base64
+from pathlib import Path
 
 languages = ['English', 'Chinese', 'French', 'German', 'Italian', 'Russian', 'Spanish']
 #Add to secrets
@@ -225,148 +224,6 @@ def load_css(file_path):
     with open(file_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-
-# Deprecated (for folium world map)
-# def create_frequency_map(world_map, final_df, year):
-#     """
-#     Generates a clean, professional world map colored by relative frequency.
-#     """
-    
-#     if final_df.empty:
-#         st.info("Press 'Run Linguistic Search' to generate the initial visualizations.")
-#         return
-
-#     freq_year = final_df[final_df['year'] == year].copy()
-    
-#     if freq_year.empty:
-#         st.warning(f"No data available for year {year}")
-#         return
-    
-#     target_languages = [
-#         'English', 'Español', 'Français', 'Deutsch', 
-#         'Italiano', 'Русский', '中文', 'עִברִית'
-#     ]
-    
-#     # Create display_name column
-#     freq_year['display_name'] = freq_year['language'].map(lambda x: lang_to_translation[lang_code_to_display[x]])
-    
-#     # Aggregate by language: sum frequencies and collect all words
-#     freq_lookup_df = freq_year.groupby('display_name').agg({
-#         'frequency': 'sum',
-#         'word': lambda words: list(words.unique()),
-#         'is_synonym': 'first'
-#     }).reset_index()
-    
-#     # Create formatted word-frequency pairs for display
-#     word_freq_display = {}
-#     for lang in freq_lookup_df['display_name'].unique():
-#         lang_data = freq_year[freq_year['display_name'] == lang]
-#         word_freqs = lang_data.groupby('word')['frequency'].sum().to_dict()
-#         sorted_word_freqs = sorted(word_freqs.items(), key=lambda x: x[1], reverse=True)
-#         formatted = ', '.join([f"{word} ({freq:.6f})" for word, freq in sorted_word_freqs])
-#         word_freq_display[lang] = formatted
-    
-#     # Create lookup dictionaries
-#     freq_lookup = freq_lookup_df.set_index('display_name')['frequency'].to_dict()
-#     words_lookup = {lang: word_freq_display[lang] for lang in word_freq_display}
-    
-#     # Prepare choices for np.select
-#     frequency_choices = [
-#         freq_lookup.get(lang, np.nan)
-#         for lang in target_languages
-#     ]
-#     word_display_choices = [
-#         words_lookup.get(lang, 'No data')
-#         for lang in target_languages
-#     ]
-    
-#     # Create boolean masks for each language
-#     langs = [
-#         (world_map['Primary Language (based on 2015)'] == lang)
-#         for lang in target_languages
-#     ]
-    
-#     # Assign values to world_map
-#     world_map['Frequency'] = np.select(langs, frequency_choices, default=np.nan)
-#     world_map['Words_Display'] = np.select(langs, word_display_choices, default='No data')
-#     world_map['Language'] = world_map['Primary Language (based on 2015)']
-    
-#     # Format frequency for display
-#     world_map['Frequency_Display'] = world_map['Frequency'].apply(
-#         lambda x: f"{x:.6f}" if pd.notna(x) else "No data"
-#     )
-    
-#     # Create base folium map
-#     m = folium.Map(
-#         location=[20, 0],
-#         zoom_start=2,
-#         min_zoom=2,
-#         max_zoom=6,
-#         tiles=None,
-#         zoom_control=True,
-#         scrollWheelZoom=False
-#     )
-#     # Add CSS (taken from assets/world_map_css) to style the legend
-#     m.get_root().html.add_child(folium.Element(world_map_css))
-    
-#     freq_values = world_map['Frequency'].dropna()
-#     bins = list(freq_values.quantile([0, 0.2, 0.4, 0.6, 0.8, 1.0]))
-#     # Add choropleth layer with custom styling and highlight
-#     folium.Choropleth(
-#         geo_data=world_map,
-#         data=world_map,
-#         columns=['Country', 'Frequency'],
-#         key_on='feature.properties.Country',
-#         fill_color='viridis',
-#         fill_opacity=0.75,
-#         line_opacity=1,
-#         line_color='white',
-#         line_weight=1.5,
-#         legend_name='Relative Frequency',
-#         nan_fill_color='lightgrey',
-#         nan_fill_opacity=0.7,
-#         bins = bins,
-#         # reset = True
-#     ).add_to(m)
-
-#     style_function = lambda x: {
-#         'fillColor': 'transparent',
-#         'color': 'black',
-#         'weight': 1.5,
-#         'fillOpacity': 0
-#     }
-    
-#     highlight_function = lambda x: {
-#         'fillColor': '#fcf7f7',
-#         'color': '#0a0a0a',
-#         'fillOpacity': 0.5,
-#         'weight': 3
-#     }
-    
-#     folium.GeoJson(
-#         world_map,
-#         style_function=style_function,
-#         highlight_function=highlight_function,
-#         tooltip=folium.GeoJsonTooltip(
-#             fields=['Country', 'Language', 'Words_Display', 'Frequency_Display'],
-#             aliases=['Country:', 'Language:', 'Words:', 'Frequency:'],
-#             sticky=False
-#         ),
-#         popup=folium.GeoJsonPopup(
-#             fields=['Country', 'Language', 'Words_Display', 'Frequency_Display'],
-#             aliases=['Country:', 'Language:', 'Words:', 'Frequency:']
-#         )
-#     ).add_to(m)
-    
-#     # Display with cleaner settings
-#     st_folium(
-#         m, 
-#         width=None,
-#         height=600,
-#         returned_objects=[],
-#         use_container_width=True
-#     )
-
 def create_timeseries(final_df):
     """
     Creates a polished Plotly time series chart with smoothing, 
@@ -395,7 +252,7 @@ def create_timeseries(final_df):
     df['frequency_smooth'] = df.groupby('label')['frequency'].transform(
         lambda x: x.rolling(window=5, min_periods=1).mean()
     )
-
+    df['frequency_mu_text'] = (df['frequency_smooth'] * 1000000).apply(lambda x: f"{x:.2f} \u03bc")
     # --- 2. Initialize the Figure ---
     fig = go.Figure()
 
@@ -425,12 +282,14 @@ def create_timeseries(final_df):
             name=label,
             line=line_style,
             opacity=opacity,
+            customdata=group[['frequency_mu_text']],
             # Store metadata for the filter logic
             meta={'language': language, 'is_synonym': is_synonym},
             hovertemplate=(
                 "<b>%{text}</b><br>" +
                 "Year: %{x}<br>" +
-                "Freq: %{y:.2e}<extra></extra>"
+                # "Freq: %{y:.2e}<extra></extra>"+
+                "Freq: %{customdata[0]}<extra></extra>"
             ),
             text=group['word'] # For the tooltip
         ))
@@ -718,7 +577,7 @@ def create_frequency_map_plotly(world_map, final_df, year):
             title='Frequency',
             title_side='top',
             xanchor='left',
-            x=0.8,
+            x=1.01,
             y=0.5,
             len=0.7,
             thickness=15,
@@ -822,3 +681,24 @@ def timeit(func):
         print(f"[TIMER] {func.__name__} executed in {end - start:.5f} seconds.")
         return result
     return wrapper
+
+def get_image_as_base64(image_path):
+    """Convert a local image file to a base64 data URI."""
+    try:
+        with open(image_path, "rb") as img_file:
+            encoded = base64.b64encode(img_file.read()).decode()
+        # Detect file extension to set correct MIME type
+        ext = Path(image_path).suffix.lower()
+        mime_types = {
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.gif': 'image/gif',
+            '.svg': 'image/svg+xml',
+            '.webp': 'image/webp'
+        }
+        mime_type = mime_types.get(ext, 'image/png')
+        return f"data:{mime_type};base64,{encoded}"
+    except Exception as e:
+        st.error(f"Error loading image {image_path}: {e}")
+        return "https://via.placeholder.com/800x600?text=Image+Not+Found"

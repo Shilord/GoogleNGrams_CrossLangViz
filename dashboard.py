@@ -48,6 +48,14 @@ def show_dashboard():
 
     input_language = None
 
+    if 'search_just_completed' not in st.session_state:
+        st.session_state['search_just_completed'] = False
+    
+    # Auto-collapse controls when search just completes
+    if st.session_state.get('search_just_completed', False):
+        st.session_state.toggle_controls = False
+        st.session_state['search_just_completed'] = False 
+
     if 'app_initialized' not in st.session_state:
         default_df = pd.read_csv("example_data.csv") 
         st.session_state['final_data'] = default_df
@@ -105,9 +113,20 @@ def show_dashboard():
     empty_map = load_empty_map()
 
     load_css('assets/styles.css')
-
-    st.title('Exploring Multicultural Linguistic Trends Through Google Ngrams')
-
+    _,col_1,_ = st.columns([3.7,6,1])
+    with col_1:
+        st.title('Words Across Borders')
+    st.markdown(
+        '''
+        <p style="font-size: 18px; color: #a8a8a8;text-align: left">
+            Visualizing word frequencies over time and space via Google N-grams. An interactive exploration of the historical popularity of words, mapping their trajectory across linguistic borders to reveal the shifting landscape of human thought. \n For more instructions, see the
+            <a href="?tab=User Manual" target="_self" style="color: #4da6ff; text-decoration: none;">
+                User Manual
+            </a>
+        </p>
+        ''', 
+        unsafe_allow_html=True
+    )
     with sticky_container(mode="top", border=True):
         # Header with toggle button
         col_header, col_toggle = st.columns([0.9, 0.1])
@@ -291,6 +310,7 @@ def show_dashboard():
         return final_df
     if search_button:
         try:
+            st.session_state['search_just_completed'] = True  
             if len(target_word.strip().split(','))>1:
                 st.session_state['is_phrase'] = False
                 st.session_state['is_comparison'] = True
@@ -326,9 +346,12 @@ def show_dashboard():
                         df = pd.concat([df,get_synonyms_and_translations(word,num_synonyms,None,None,input_language,filter_langs,st.session_state['is_phrase'])],ignore_index=True)
                     st.session_state['final_data'] = df
 
-            st.session_state['search_run'] = True      
+            st.session_state['search_run'] = True 
+            st.rerun()
+               
         except ValueError as e:
             st.session_state['search_run'] = False
+            st.session_state['search_just_completed'] = False
             st.error(f"Validation Error: {e}")
 
     if st.session_state['search_run']:
@@ -445,9 +468,9 @@ def show_dashboard():
                 if word_cloud_image_buffer:
                     st.image(word_cloud_image_buffer, use_container_width=True)
         
-        _,col2,_ = st.columns([0.3,0.6,0.1])
+        _,col2,_ = st.columns([0.4,0.5,0.1])
         with col2: 
-            st.subheader(f"Word Frequency Over Time (smoothed)",help = """
+            st.subheader(f"Word Frequency Over Time",help = """
                          Track how word usage has evolved across centuries and languages
         
     What you're seeing:

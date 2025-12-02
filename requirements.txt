@@ -5,3 +5,4 @@ plotly
 altair
 deep-translator
 detectlanguage
+streamlit-option-menu
