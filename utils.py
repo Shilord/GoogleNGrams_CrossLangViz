@@ -340,8 +340,6 @@ def create_frequency_map(world_map, final_df, year):
         use_container_width=True
     )
 
-
-
 def create_timeseries(final_df):
     """
     Creates a polished Plotly time series chart with smoothing, 
@@ -487,18 +485,20 @@ def color_func(word, font_size, position, orientation, random_state=None, **kwar
 
 def create_word_cloud(final_df, year_range):
     """
-    Generates a language-colored WordCloud with a transparent background
-    and adjusted figure size to match the timeseries plot.
+    Generates a language-colored WordCloud, a Plotly Bar Chart, and 
+    returns both visualizations along with the data for the table.
     """
     if final_df.empty:
         st.info("No data available to generate word cloud.")
-        return None, pd.DataFrame()
+        return None, pd.DataFrame(), None 
 
     lang_to_lang_translation_inverse = {v:k for k,v in lang_to_lang_translation.items()}
     df = final_df.copy()
-    df['display_language'] = df['language'].map(lambda x: lang_to_lang_translation_inverse.get(x, x))
-    df = df.loc[df['year']==year_range]
+    
+    df['display_language'] = df['language'].map(lambda x: lang_code_to_display.get(x, x))
+    df = df.loc[df['year']==year_range] 
 
+    # --- 1. Data Aggregation & Preparation (Used by both charts) ---
     word_freq_max = df.groupby(['word', 'display_language']).agg(
         max_frequency=('frequency', 'max')
     ).reset_index()
@@ -506,52 +506,99 @@ def create_word_cloud(final_df, year_range):
     word_freq_max = word_freq_max[word_freq_max['max_frequency'] > 1e-9]
     
     data_for_display = word_freq_max.sort_values(by='max_frequency', ascending=False).head(20).copy()
-    data_for_display['Color'] = data_for_display['display_language'].map(lambda x: LANGUAGE_COLORS_MAP.get(x, 'gray'))
-    data_for_display = data_for_display.rename(columns={'word': 'Word', 'max_frequency': 'Max Frequency', 'display_language': 'Language'})
-    data_for_display['Max Frequency'] = data_for_display['Max Frequency'].apply(lambda x: f"{x:.6e}")
-    data_for_display = data_for_display[['Word', 'Language', 'Max Frequency', 'Color']]
 
+    if data_for_display.empty:
+        st.info(f"No words found above minimum frequency threshold for year {year_range}.")
+        return None, pd.DataFrame(), None 
+    
+    data_for_display['Color'] = data_for_display['display_language'].map(lambda x: LANGUAGE_COLORS_MAP.get(x, 'gray'))
+    data_for_display = data_for_display.rename(
+        columns={'word': 'Word', 'max_frequency': 'Max Frequency', 'display_language': 'Language'}
+    )
+    
+    # --- PPM SCALING ---
+    data_for_display['Max Frequency Value'] = data_for_display['Max Frequency']
+    data_for_display['Max Frequency PPM'] = data_for_display['Max Frequency Value'] * 1_000_000
+    data_for_display['Max Frequency'] = data_for_display['Max Frequency PPM'].apply(lambda x: f"{x:.2f} PPM")
+    data_for_display = data_for_display[['Word', 'Language', 'Max Frequency Value', 'Max Frequency PPM', 'Max Frequency', 'Color']]
+    # --- END PPM SCALING ---
+    
+    # --- 2. Plotly Bar Chart Generation ---
+    fig_bar = go.Figure()
+    bar_data = data_for_display.sort_values(by='Max Frequency Value', ascending=True)
+    bar_colors = bar_data['Color'].tolist()
+
+    bar_data['Unique_Label'] = bar_data['Word'] + ' (' + bar_data['Language'] + ')'
+    
+    fig_bar.add_trace(go.Bar(
+        y=bar_data['Unique_Label'],
+        x=bar_data['Max Frequency PPM'], 
+        orientation='h',
+        marker_color=bar_colors,
+        customdata=list(zip(bar_data['Language'], bar_data['Max Frequency'])),
+        hovertemplate=(
+            "<b>%{y}</b><br>" +
+            "<b>Frequency:</b> %{customdata[1]}<extra></extra>"
+        ),
+        # --- FIX: Use Unicode (\u03bc) for symbol and remove $ and \ characters ---
+        text=bar_data['Max Frequency PPM'].apply(lambda x: f"{x:.2f} \u03bc"), 
+        textposition='inside',
+        insidetextfont=dict(color='black')
+        # --- END FIX ---
+    ))
+
+    fig_bar.update_layout(
+        template="plotly_dark",
+        yaxis_title="Word and Language", 
+        
+        # --- FIX: Use Unicode for the axis title ---
+        xaxis_title="Scaled Frequency (\u03bc)",
+        xaxis_type="linear", 
+        # --- END FIX ---
+        
+        height=600,
+        margin=dict(l=0, r=0, t=20, b=10, pad = 0),
+        font=dict(size=10),
+        hoverlabel=dict(bgcolor="white", font_size=12, font_color="black"),
+        yaxis=dict(automargin=True)
+    )
+    # --- End Plotly Bar Chart Generation ---
+
+    # --- 3. Matplotlib Word Cloud Generation ---
     word_to_language_map = word_freq_max.set_index('word')['display_language'].to_dict()
     freq_dict = word_freq_max.set_index('word')['max_frequency'].to_dict()
 
-    
     def custom_color_func(word, font_size, position, orientation, random_state=None, **kwargs):
         language = word_to_language_map.get(word, 'English') 
         return LANGUAGE_COLORS_MAP.get(language, 'gray')
 
-    
     wc = WordCloud(
         font_path = 'assets/NotoSansSC-Regular.ttf',
         width=800, 
-        height=500, # Height matches the timeseries plot (500px)
-        background_color='#0d1118', # Crucial step 1: Tell WordCloud not to draw a background
+        height=700, 
+        background_color='#0d1118',
         max_words=100,
         normalize_plurals=False
     ).generate_from_frequencies(freq_dict)
     
     wc.recolor(color_func=custom_color_func)
 
-    fig, ax = plt.subplots(figsize=(10, 6.25)) 
-    
+    fig_wc, ax = plt.subplots(figsize=(10, 6.25)) 
     ax.imshow(wc, interpolation='bilinear')
     ax.axis('off')
     
-    fig.patch.set_facecolor('none')
-    fig.patch.set_alpha(0.0)
-    
+    fig_wc.patch.set_facecolor('none')
+    fig_wc.patch.set_alpha(0.0)
     ax.patch.set_facecolor('none')
     ax.patch.set_alpha(0.0)
     
     buf = io.BytesIO()
     plt.savefig(buf, format='png', bbox_inches='tight', transparent=True) 
-    plt.close(fig) 
+    plt.close(fig_wc) 
     
-    # Reset Matplotlib style to default
     plt.style.use('default') 
 
-    # Return the image buffer for display and the DataFrame for the table
-    return buf
-
+    return buf, data_for_display[['Word', 'Language', 'Max Frequency', 'Color']], fig_bar
 
 def create_frequency_map_plotly(world_map, final_df, year):
     """

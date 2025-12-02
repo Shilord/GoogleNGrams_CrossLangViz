@@ -42,11 +42,62 @@ def sticky_container(
     container.markdown(html_code, unsafe_allow_html=True)
     return container
 
+# Define the images and initial state for the carousel
+# NOTE: Replace these with actual image paths or URLs you want to display!
+LOADING_IMAGES = [
+    "Loader_images/1.png", 
+    "Loaser_images/2.png", 
+]
+
+def image_carousel_during_load():
+    """Displays a single image with navigation buttons during the loading screen."""
+    
+    # Use st.empty to create a container that can be dynamically updated inside the spinner
+    carousel_container = st.empty()
+    
+    with carousel_container.container():
+        st.caption("Fascinating facts about language while you wait...")
+        
+        # Determine the image to show
+        current_index = st.session_state.current_loading_image_index
+        
+        if not LOADING_IMAGES:
+            st.info("Loading...")
+            return carousel_container
+
+        image_to_show = LOADING_IMAGES[current_index]
+        
+        # Display the image
+        st.image(image_to_show, use_column_width=True, caption=f"Image {current_index + 1} of {len(LOADING_IMAGES)}")
+        
+        # Navigation buttons
+        col_back, col_next = st.columns([1, 1])
+        
+        with col_back:
+            if st.button("⬅️ Back"):
+                # Rerunning immediately updates the index
+                st.session_state.current_loading_image_index = (current_index - 1) % len(LOADING_IMAGES)
+                st.experimental_rerun()
+        
+        with col_next:
+            if st.button("Next ➡️"):
+                # Rerunning immediately updates the index
+                st.session_state.current_loading_image_index = (current_index + 1) % len(LOADING_IMAGES)
+                st.experimental_rerun()
+        
+        return carousel_container
+
 
 def show_dashboard():
     languages = ['English', 'Chinese', 'French', 'German', 'Italian', 'Russian', 'Spanish']
 
     input_language = None
+    
+    # --- FIX 1: Initialize the carousel index at the start of the function ---
+    if 'current_loading_image_index' not in st.session_state:
+        st.session_state.current_loading_image_index = 0
+    # --- END FIX 1 ---
+
 
     if 'app_initialized' not in st.session_state:
         default_df = pd.read_csv("example_data.csv") 
@@ -303,15 +354,32 @@ def show_dashboard():
             print("Detected Language:" + input_language)
 
             if st.session_state['is_comparison']==False:
+                # --- START LOADING BLOCK WITH CAROUSEL ---
                 with st.spinner('Running linguistic search...'):
+                    # 1. Start the image carousel immediately
+                    carousel_placeholder = image_carousel_during_load()
+                    
+                    # 2. Run the heavy API task
                     st.session_state['final_data'] = get_synonyms_and_translations(target_word,num_synonyms,context_topics,pos_tag,input_language,filter_langs,st.session_state['is_phrase'])
+                
+                # 3. Once the 'with st.spinner' block exits (data loaded), clear the carousel.
+                carousel_placeholder.empty()
+                # --- END LOADING BLOCK ---
+
             else: 
                 target_words =  [i.strip() for i in target_word.strip().split(',')]
+                # --- START COMPARISON LOADING BLOCK WITH CAROUSEL ---
                 with st.spinner('Running linguistic search...'):
+                    # Display carousel for comparison load as well
+                    carousel_placeholder = image_carousel_during_load()
+
                     df = pd.DataFrame()
                     for word in target_words:
                         df = pd.concat([df,get_synonyms_and_translations(word,num_synonyms,None,None,input_language,filter_langs,st.session_state['is_phrase'])],ignore_index=True)
                     st.session_state['final_data'] = df
+                    
+                carousel_placeholder.empty()
+                # --- END COMPARISON LOADING BLOCK ---
 
             st.session_state['search_run'] = True      
         except ValueError as e:
@@ -426,7 +494,7 @@ def show_dashboard():
         
         Why words appear multiple times:
         If you included synonyms, you might see related words (like "happy," 
-        "joyful," "cheerful") all displayed together.
+        joyful," "cheerful") all displayed together.
 
                             """ )
                 if word_cloud_image_buffer:
