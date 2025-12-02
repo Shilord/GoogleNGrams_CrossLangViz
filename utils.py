@@ -710,7 +710,7 @@ def create_frequency_map_plotly(world_map, final_df, year):
         locationmode='country names',
         locations=map_supported['Country'],
         z=map_supported['Frequency'],
-        colorscale='Viridis',
+        colorscale='Blues',
         reversescale=False,
         autocolorscale=False,
         marker_line_color='black',
@@ -742,7 +742,7 @@ def create_frequency_map_plotly(world_map, final_df, year):
         locations=map_unsupported['Country'],
         z=map_unsupported['Frequency'],
         showscale=False,
-        colorscale=[[0, 'lightgrey'], [1, 'lightgrey']],
+        colorscale=[[0, 'darkgrey'], [1, 'darkgrey']],
         marker_line_color='black',
         marker_line_width=1.5,
         customdata=list(zip(
