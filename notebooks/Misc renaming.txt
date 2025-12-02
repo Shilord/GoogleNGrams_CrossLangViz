@@ -1,7 +1,8 @@
-Title: Exploring Linguistic Trends Across Languages 
+Title: 
+Words Across Borders
 
 Subtitle:
-Comparing frequencies of different words or phrases (Ngrams) over time and in various languages through visualizations of the Google Ngram dataset (hyperlink user manual)
+Visualizing word frequencies over time and space via Google Ngrams (hyperlink user manual + tooltip saying "What are frequencies and Ngrams? See "User Manual" tab") 
 __________________________
 World map: 
 Title: "Interactive World Heatmap for Ngram Frequency - Year XXX"

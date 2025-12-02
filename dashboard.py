@@ -90,14 +90,16 @@ def show_dashboard():
     #Build world map
     @st.cache_resource
     def load_empty_map():
-        empty_map = gpd.read_file("soc_071_world_languages.zip") 
-        empty_map['geometry'] = empty_map['geometry'].simplify(tolerance=0.03, preserve_topology=True)
+        # empty_map = gpd.read_file("soc_071_world_languages.zip") 
+        # empty_map['geometry'] = empty_map['geometry'].simplify(tolerance=0.03, preserve_topology=True)
 
-        # Cleaning map data
-        empty_map = empty_map.loc[:, ['COUNTRY', 'FIRST_OFFI', 'geometry']]
-        empty_map = empty_map.rename(columns={'COUNTRY': 'Country', 'FIRST_OFFI': 'Primary Language (based on 2015)'})
-        empty_map['Primary Language (based on 2015)'] = empty_map['Primary Language (based on 2015)'].replace({'English': 'English', 'Spanish': 'Español', 'French': 'Français', 'German': 'Deutsch', 'Italian': 'Italiano', 'Russian': 'Русский', 'Standard Chinese or Mandarin': '中文', 'Hebrew': 'עִברִית'})
-        map = empty_map.copy(deep=True)
+        # # Cleaning map data
+        # empty_map = empty_map.loc[:, ['COUNTRY', 'FIRST_OFFI', 'geometry']]
+        # empty_map = empty_map.rename(columns={'COUNTRY': 'Country', 'FIRST_OFFI': 'Primary Language (based on 2015)'})
+        # empty_map['Primary Language (based on 2015)'] = empty_map['Primary Language (based on 2015)'].replace({'English': 'English', 'Spanish': 'Español', 'French': 'Français', 'German': 'Deutsch', 'Italian': 'Italiano', 'Russian': 'Русский', 'Standard Chinese or Mandarin': '中文', 'Hebrew': 'עִברִית'})
+        # map = empty_map.copy(deep=True)
+        # return map
+        map = pd.read_csv('empty_map.csv')
         return map
 
     empty_map = load_empty_map()
