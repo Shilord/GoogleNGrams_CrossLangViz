@@ -250,8 +250,11 @@ def show_dashboard():
     synonyms_choice = st.session_state.synonyms_choice
     num_synonyms = st.session_state.num_synonyms if st.session_state.synonyms_choice == "Yes" else 0
 
+    
+    @timeit
     @st.cache_data
     def get_synonyms_and_translations(target_word,num_synonyms,context_topics,pos_tag,input_language,selected_langs,is_phrase):
+        target_word = target_word.lower()
         #Find synonyms of target word
         if synonyms_choice=='Yes' and is_phrase==False:
             synonyms = get_synonyms(target_word,num_synonyms,context_topics,pos_tag)
@@ -259,15 +262,23 @@ def show_dashboard():
         else:
             synonyms = []
 
-        #Find translations in 7 languages for all words and synonyms
-        all_dfs = []
-        for word in [target_word]+synonyms:
-            is_synonym_flag = 1 if word != target_word else 0
-            translations_df = get_translations(word,input_language,[lang_to_lang_translation[i] for i in selected_langs])
-            translations_df['is_synonym'] = is_synonym_flag
-            all_dfs.append(translations_df)
+        # Find translations in 7 languages for all words and synonyms (no batch translations)
+        # all_dfs = []
+        # for word in [target_word]+synonyms:
+        #     is_synonym_flag = 1 if word != target_word else 0
+        #     translations_df = get_translations(word,input_language,[lang_to_lang_translation[i] for i in selected_langs])
+        #     translations_df['is_synonym'] = is_synonym_flag
+        #     all_dfs.append(translations_df)
 
-        raw_final_df = pd.concat(all_dfs, ignore_index=True)
+        # raw_final_df = pd.concat(all_dfs, ignore_index=True)
+        #For batch translations
+        word_list = [target_word] + synonyms
+        translations_df = get_translations_batch(word_list, input_language, [lang_to_lang_translation[i] for i in selected_langs])
+        translations_df['word'] = translations_df['word'].str.lower()
+        translations_df['is_synonym'] = translations_df['word'].apply(
+            lambda w: 0 if w == target_word else 1
+        )
+        raw_final_df = translations_df
 
         dedup_df = raw_final_df.sort_values(by='is_synonym', ascending=True)
 

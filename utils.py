@@ -83,6 +83,26 @@ def get_languages(input, input_lang, langs_selected):
             df['language'] = df['language'].replace('zh-CN', 'zh')
     return df
 
+# batch translate
+def get_languages_batch(input, input_lang, langs_selected):
+    df = pd.DataFrame(columns = ['word', 'language'])
+    for i in range(len(input)):
+        if input[i].lower() not in df['word'].tolist():
+            current = pd.DataFrame({'word' : input[i].lower(),
+                                    'language' : input_lang}, index = [0])
+            df = pd.concat([df, current], ignore_index = True)
+    for lang in langs_selected:
+        if lang != input_lang:
+            translator = GoogleTranslator(source = input_lang, target = lang)
+            new_words = translator.translate_batch(input)
+            for i in range(len(new_words)):
+                if new_words[i].lower() not in df['word'].tolist():
+                    new_entry = pd.DataFrame({'word' : new_words[i].lower(),
+                                              'language' : lang}, index = [0])
+                    df = pd.concat([df, new_entry], ignore_index = True)
+            df['language'] = df['language'].replace('zh-CN', 'zh')
+    return df
+
 # gets frequency data from google ngram API
 def get_frequency(df):
     years = list(range(MIN_YEAR, MAX_YEAR + 1))
@@ -122,8 +142,14 @@ def get_frequency(df):
         return pd.DataFrame()
 
 # main function to run (combines above functions)
+def get_translations_batch(word, input_lang, langs_needed):
+    return get_frequency(get_languages_batch(word, input_lang, langs_needed))
+
+# main function to run (combines above functions)
 def get_translations(word, input_lang, langs_needed):
     return get_frequency(get_languages(word, input_lang, langs_needed))
+
+
 
 
 #Function to get synonyms
@@ -787,3 +813,13 @@ def create_frequency_map_plotly(world_map, final_df, year):
     
     return fig
 
+import time
+
+def timeit(func):
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        end = time.perf_counter()
+        print(f"[TIMER] {func.__name__} executed in {end - start:.5f} seconds.")
+        return result
+    return wrapper
