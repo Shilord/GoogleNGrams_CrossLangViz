@@ -468,6 +468,7 @@ def show_dashboard():
                 if word_cloud_image_buffer:
                     st.image(word_cloud_image_buffer, use_container_width=True)
         
+       
         _,col2,_ = st.columns([0.4,0.5,0.1])
         with col2: 
             st.subheader(f"Word Frequency Over Time",help = """
