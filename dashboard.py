@@ -365,38 +365,15 @@ def show_dashboard():
                 step=1,
                 help="Select a single specific year for the corpus analysis."
             )
-            # world_map = empty_map.copy(deep=True)
-            # create_frequency_map(world_map, st.session_state['final_data'], year_range)
 
             world_map = empty_map.copy(deep=True)
             _,col1,_ = st.columns([0.3,0.6,0.1])
             with col1: 
-                st.subheader(f"World Map Ngram Frequency - Year {year_range}",help = """
-                            Explore how your search term varies across countries and languages 
-            
-        1. What you're seeing:
-        This map shows how frequently your search term (and its translations and synonyms) appear in books from different countries, based on each country's primary language.
-        
-        2. Color Intensity:
-        - Darker colors = Your word appears LESS frequently in that language
-        - Lighter colors = Your word appears MORE frequently
-        - Grey countries = Language not currently supported in our analysis
-        
-        3. How to interact:
-        - Hover over any country** to see:
-        - The country name and primary language
-        - All translated words/synonyms for that language
-        - Exact frequency values
-        - Use the year slider above to see how word usage changes over time
-        
-        Pro tip: Countries with the same primary language will have the same 
-        color. For example, all Spanish-speaking countries share the same frequency 
-        data for Spanish translations of your word.
-        
-        What is Relative Frequency?
-        This is the number of times your word appears per million words in books 
-        from that language during the selected year.
-        """ )
+                st.subheader(f"Interactive World Heatmap for Word Frequencies - Year {year_range}",help = """"
+                            Explore how your search term's usage varies across countries and languages in this interactive 
+                            map via color intensity. Hover over each country to see specifics like primary language, and 
+                            move the date slider to compare trends over time. Note that the map is based on primary languages 
+                            spoken by each country in 2015.""")
             fig = create_frequency_map_plotly(world_map, st.session_state['final_data'], year_range)
             if fig:
                 st.plotly_chart(fig, use_container_width=True,config={'displayModeBar': False})
@@ -409,25 +386,9 @@ def show_dashboard():
             # --- END BAR CHART INTEGRATION ---
 
             with col_chart_left:
-                st.subheader(f"Top Words by Language - Year {year_range}", help = """
-                            Compare which translation or synonym is most popular in each language
-        What you're seeing:
-        This chart ranks the most frequently used words across all languages for the selected year. Each bar represents one word in one language.
-        
-        The bars show:
-        - Height = How frequently the word appears (higher = more common)
-        - Color = Which language the word belongs to
-        - Label = The actual word and its language
-        
-        Why this matters:
-        - See which languages use your concept most frequently
-        - Discover if synonyms are more popular than direct translations
-        - Compare cultural differences in word usage
-        
-        How to use it:
-        - Hover over bars to see exact frequency values
-        - Look for patterns: Do certain languages favor this word?
-        - Compare with the map to see regional patterns
+                st.subheader(f"Stacked Bar Graph: Words Frequencies by Language - Year {year_range}", help = """
+                            Compare how much a concept (search term + synonyms) is written about in each language. 
+                            Hover over each block to see the exact frequencies for that word/phrase. 
                             """ )
                 # 2. Display the Plotly Bar Chart
                 if fig_bar:
@@ -436,70 +397,22 @@ def show_dashboard():
                     st.text("Bar Graph here") # This will now be replaced by the chart if data exists
 
             with col_chart_right:
-                st.subheader(f"Word Cloud: Top Terms by Frequency - Year {year_range}", help = """
-                            Visual snapshot of the most popular words and their languages
-        What you're seeing:
-        A visual representation of words, where size and color tell you about each word's importance and language.
-        
-        Size matters:
-        - Bigger words = Used MORE frequently in books
-        - Smaller words = Used less frequently
-        - Only shows words that appeared at least once in the selected year
-        
-        Colors represent languages:
-        - 🟡 Yellow = English
-        - 🔴 Red = Spanish
-        - 🔵 Blue = French
-        - 🟣 Purple = German
-        - 🟠 Orange = Italian
-        - 🔷 Cyan = Russian
-        - 🟢 Green = Chinese
-        
-        What you can learn:
-        - Which words dominate? The biggest words are cultural favorites
-        - Language diversity: Many colors = your concept translates well
-        - Synonym popularity: If you included synonyms, see which alternatives are most common
-        
-        Why words appear multiple times:
-        If you included synonyms, you might see related words (like "happy," 
-        "joyful," "cheerful") all displayed together.
-
+                st.subheader(f"Word Cloud: Words by Frequency - Year {year_range}", help = """
+                            Observe the popularity of each translation or synonym in different languages.  
+                            The larger the word or phrase, the more frequently it is used, while  
+                            the color corresponds to what language it's from (see bar graph colors). 
                             """ )
                 if word_cloud_image_buffer:
                     st.image(word_cloud_image_buffer, use_container_width=True)
         
         _,col2,_ = st.columns([0.4,0.5,0.1])
         with col2: 
-            st.subheader(f"Word Frequency Over Time",help = """
-                         Track how word usage has evolved across centuries and languages
-        
-    What you're seeing:
-    This graph shows how frequently your search term appears in books 
-    over 422 years (1600-2022), with a separate line for each language 
-    and word variation.
-    
-    The lines represent:
-    - Solid lines = Your original search term in each language
-    - Dotted lines = Synonym variations (if you included them)
-    - Line color = Language (matches the legend and word cloud colors)
-    - Height (Y-axis) = Frequency (higher = more common)
-    
-    The data is smoothed:
-    We use a 5-year moving average to reduce noise and show clearer 
-    trends. This makes it easier to spot real patterns versus random spikes.
-    
-    Interactive features:
-    - Hover over lines** to see exact year and frequency
-    - Click legend items** to show/hide specific words
-    - Use the language filter dropdown to focus on one language
-    - Drag the range slider at the bottom to zoom into specific time periods
-    - Click and drag on the chart to pan left and right
-    
-    Pro tips:
-    - Compare synonyms to see if one term dominated over time
-    - Look for when different languages "discovered" the same concept
-    - Use the range slider to focus on specific historical periods
-    - Notice how books published in different eras preferred different terms
-    """ )
+            st.subheader(f"Time Series: Word Frequency Over Time", help = """
+                         See how often your input term, along with all translations and synonyms in other 
+                         languages, is used over time in this interactive smoothed time series graph 
+                         (5-year moving average to reduce noise). Hover over lines, show/hide entries by 
+                         clicking in the legend, use the language filter dropdown, or drag the range slider 
+                         at the bottom to select time frame.
+                         """ )
         time_chart = create_timeseries(st.session_state['final_data'])
         st.plotly_chart(time_chart, use_container_width=True)

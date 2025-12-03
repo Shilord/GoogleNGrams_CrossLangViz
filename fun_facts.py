@@ -36,9 +36,12 @@ captions = [f"Fun Fact {i+1}" for i in range(len(images))]
 fun_facts = list(images_raw.values())
 # --- END DATA ---
 
+
+
 def show_fun_facts():
     st.title("Fun Facts Gallery")
-
+    
+    
     # Define dark colors based on your request
     PLOTLY_DARK = "#1f2127"
     GREYISH_NAVIGATOR = "#343a40"
