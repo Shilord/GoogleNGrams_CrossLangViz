@@ -20,6 +20,31 @@ div[data-testid="stVerticalBlock"] div:has(div.fixed-header-{i}) {{
 <div class='fixed-header-{i}'/>
 """.strip()
 
+EQUAL_HEIGHT_CSS = """
+<style>
+/* 1. Fix Height for Alignment */
+.equal-height-container {
+    height: 600px !important;  /* Locks the height of the container */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* 2. Fix Unnecessary Space Below Subheaders (APPLIED TO ALL H3 HEADERS) */
+/* This targets all st.subheader elements and removes their default bottom margin. */
+section.main [data-testid="stVerticalBlock"] h3 {
+    margin-bottom: -15px !important; 
+    padding-bottom: 0px !important; 
+}
+
+/* 3. FINAL WORDCLOUD HEIGHT LOCK: Force the image element to fill the container height */
+.equal-height-container img {
+    height: 100% !important; 
+    object-fit: contain; 
+}
+</style>
+"""
+
 # Not to apply the same style to multiple containers
 count = 0
 
@@ -179,6 +204,8 @@ def show_dashboard():
                         help="Filter the keyword by its grammatical role in the corpus (e.g., searching 'run' only as a Verb)."
                     )
                     st.session_state.pos_tag = pos_tag
+                    st.markdown("<div style='margin-top: 0.65rem;'></div>", unsafe_allow_html=True)
+
                     
                     context_topics = st.text_input(
                         "Context Topics",
@@ -399,7 +426,7 @@ def show_dashboard():
         """ )
             fig = create_frequency_map_plotly(world_map, st.session_state['final_data'], year_range)
             if fig:
-                st.plotly_chart(fig, use_container_width=True,config={'displayModeBar': False})
+                st.plotly_chart(fig, use_container_width=True,config={'displayModeBar': True})
 
             col_chart_left, col_chart_right = st.columns([1, 1])
 
@@ -469,7 +496,7 @@ def show_dashboard():
                     st.image(word_cloud_image_buffer, use_container_width=True)
         
        
-        _,col2,_ = st.columns([0.4,0.5,0.1])
+        _,col2,_ = st.columns([0.4,0.5,0.05])
         with col2: 
             st.subheader(f"Word Frequency Over Time",help = """
                          Track how word usage has evolved across centuries and languages
