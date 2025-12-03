@@ -374,6 +374,7 @@ def show_dashboard():
                             map via color intensity. Hover over each country to see specifics like primary language, and 
                             move the date slider to compare trends over time. Note that the map is based on primary languages 
                             spoken by each country in 2015.""")
+                st.button('?', help='This button does something amazing!')
             fig = create_frequency_map_plotly(world_map, st.session_state['final_data'], year_range)
             if fig:
                 st.plotly_chart(fig, use_container_width=True,config={'displayModeBar': False})
