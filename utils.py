@@ -44,6 +44,15 @@ LANGUAGE_COLORS_MAP = {
     'Chinese': '#2ECC71',   # Emerald Green
 }
 
+COLORSCALE_MAP = {
+    'English': 'YlOrBr',    # Yellow-Orange-Brown
+    'Spanish': 'Reds',      # Red saturation for Spanish
+    'French':  'Blues',     # Blue saturation for French
+    'German':  'Purples',   # Purple saturation for German
+    'Italian': 'Oranges',   # Orange saturation for Italian
+    'Russian': 'Teal',      # Teal saturation for Russian
+    'Chinese': 'Greens',    # Green saturation for Chinese
+}
 # Deprecated (for folium world map + localized language names)
 # lang_to_translation = {'English':'English', 
 #                             'Chinese': '中文', 
@@ -321,11 +330,11 @@ def create_timeseries(final_df):
                 active=0,
                 buttons=buttons,
                 direction="down",
-                pad={"r": 10, "t": 10},
+                pad={"r": 10, "t":10},
                 showactive=True,
-                x=0.2, # Position of the dropdown
+                x=1.05, # Position of the dropdown
                 xanchor="left",
-                y=1.17,
+                y=1.0,
                 yanchor="top",
                 bgcolor="#2b2b2b", # Dark button background
                 font=dict(color="white")
@@ -348,18 +357,15 @@ def create_timeseries(final_df):
         # Legend positioning
         legend=dict(
             yanchor="top",
-            y=1,
+            y=0.9,
             xanchor="right",
             x=1.2,
             bgcolor="rgba(0,0,0,0)" # Transparent legend
         ),
-        
-        # Add annotation for the Dropdown
-        annotations=[
-            dict(text="Filter Language:", x=0, y=1.13, xref="paper", yref="paper", showarrow=False, font=dict(size=14))
-        ],
-        
-        height=600 # Good height for viewing
+
+        height=600, 
+        margin=dict(l=20, r=20, t=25, b=20, pad=0),
+ # Good height for viewing
     )
 
     return fig
@@ -370,119 +376,153 @@ def color_func(word, font_size, position, orientation, random_state=None, **kwar
     return LANGUAGE_COLORS_MAP.get(language, 'gray') # Default to gray if language not in map
 
 def create_word_cloud(final_df, year_range):
-    """
-    Generates a language-colored WordCloud, a Plotly Bar Chart, and 
-    returns both visualizations along with the data for the table.
-    """
     if final_df.empty:
         st.info("No data available to generate word cloud.")
         return None, pd.DataFrame(), None 
 
-    lang_to_lang_translation_inverse = {v:k for k,v in lang_to_lang_translation.items()}
-    df = final_df.copy()
-    
-    df['display_language'] = df['language'].map(lambda x: lang_code_to_display.get(x, x))
-    df = df.loc[df['year']==year_range] 
+    lang_code_to_display = {
+        'en': 'English', 'ru': 'Russian', 'fr': 'French', 
+        'zh': 'Chinese', 'es': 'Spanish', 
+        'it': 'Italian', 'de': 'German'
+    }
 
-    # --- 1. Data Aggregation & Preparation (Used by both charts) ---
+    LANGUAGE_COLORS_MAP = {
+        'English': '#F4D03F',
+        'Spanish': '#FF6B6B',
+        'French':  '#54A0FF',
+        'German':  '#9B59B6',
+        'Italian': '#FF9F43',
+        'Russian': '#00D2D3',
+        'Chinese': '#2ECC71',
+    }
+
+    # High-contrast shades for stacked bar chart visibility
+    COLORSCALE_SHADES = {
+        'English': ['#F4D03F', '#E1B100', '#C7A325'],
+        'Spanish': ['#FF6B6B', '#D84C4C', '#A93226'],
+        'French':  ['#54A0FF', '#337FCC', '#1D5C99'],
+        'German':  ['#9B59B6', '#7F48A0', '#66378A'],
+        'Italian': ['#FF9F43', '#D87B22', '#A04000'],
+        'Russian': ['#00D2D3', '#00A5A6', '#007879'],
+        'Chinese': ['#2ECC71', '#1E8449', '#145A32'],
+    }
+
+    df = final_df.copy()
+    df['display_language'] = df['language'].map(lambda x: lang_code_to_display.get(x, x))
+    df = df.loc[df['year'] == year_range]
+
     word_freq_max = df.groupby(['word', 'display_language']).agg(
         max_frequency=('frequency', 'max')
     ).reset_index()
 
     word_freq_max = word_freq_max[word_freq_max['max_frequency'] > 1e-9]
-    
-    data_for_display = word_freq_max.sort_values(by='max_frequency', ascending=False).head(20).copy()
+
+    data_for_display = word_freq_max.sort_values(
+        by='max_frequency', ascending=False
+    ).head(20).copy()
 
     if data_for_display.empty:
         st.info(f"No words found above minimum frequency threshold for year {year_range}.")
         return None, pd.DataFrame(), None 
-    
-    data_for_display['Color'] = data_for_display['display_language'].map(lambda x: LANGUAGE_COLORS_MAP.get(x, 'gray'))
-    data_for_display = data_for_display.rename(
-        columns={'word': 'Word', 'max_frequency': 'Max Frequency', 'display_language': 'Language'}
-    )
-    
-    # --- PPM SCALING ---
-    data_for_display['Max Frequency Value'] = data_for_display['Max Frequency']
-    data_for_display['Max Frequency PPM'] = data_for_display['Max Frequency Value'] * 1_000_000
-    data_for_display['Max Frequency'] = data_for_display['Max Frequency PPM'].apply(lambda x: f"{x:.2f} PPM")
-    data_for_display = data_for_display[['Word', 'Language', 'Max Frequency Value', 'Max Frequency PPM', 'Max Frequency', 'Color']]
-    # --- END PPM SCALING ---
-    
-    # --- 2. Plotly Bar Chart Generation ---
-    fig_bar = go.Figure()
-    bar_data = data_for_display.sort_values(by='Max Frequency Value', ascending=True)
-    bar_colors = bar_data['Color'].tolist()
 
-    bar_data['Unique_Label'] = bar_data['Word'] + ' (' + bar_data['Language'] + ')'
-    
-    fig_bar.add_trace(go.Bar(
-        y=bar_data['Unique_Label'],
-        x=bar_data['Max Frequency PPM'], 
-        orientation='h',
-        marker_color=bar_colors,
-        customdata=list(zip(bar_data['Language'], bar_data['Max Frequency'])),
-        hovertemplate=(
-            "<b>%{y}</b><br>" +
-            "<b>Frequency:</b> %{customdata[1]}<extra></extra>"
-        ),
-        # --- FIX: Use Unicode (\u03bc) for symbol and remove $ and \ characters ---
-        text=bar_data['Max Frequency PPM'].apply(lambda x: f"{x:.2f} \u03bc"), 
-        textposition='inside',
-        insidetextfont=dict(color='black')
-        # --- END FIX ---
-    ))
+    data_for_display['Color'] = data_for_display['display_language'].map(
+        lambda x: LANGUAGE_COLORS_MAP.get(x, 'gray')
+    )
+
+    data_for_display = data_for_display.rename(
+        columns={
+            'word': 'Word',
+            'max_frequency': 'Max Frequency',
+            'display_language': 'Language'
+        }
+    )
+
+    data_for_display['Max Frequency Value'] = data_for_display['Max Frequency']
+    data_for_display['Max Frequency PPM'] = (
+        data_for_display['Max Frequency Value'] * 1_000_000
+    )
+    data_for_display['Max Frequency'] = data_for_display['Max Frequency PPM'].apply(
+        lambda x: f"{x:.2f} PPM"
+    )
+
+    data_for_display = data_for_display[
+        ['Word', 'Language', 'Max Frequency Value', 'Max Frequency PPM', 'Max Frequency', 'Color']
+    ]
+
+    fig_bar = go.Figure()
+
+    bar_data = data_for_display.sort_values(
+        by=['Language', 'Max Frequency PPM'], ascending=[True, False]
+    )
+
+    unique_langs = bar_data['Language'].unique()
+
+    for lang in unique_langs:
+        shades = COLORSCALE_SHADES.get(lang, ['#808080'] * 3)
+
+        lang_data = bar_data[bar_data['Language'] == lang]
+        lang_data = lang_data.sort_values(by="Max Frequency PPM", ascending=False)
+
+        for rank, (_, row) in enumerate(lang_data.iterrows()):
+            shade_color = shades[min(rank, len(shades) - 1)]
+
+            fig_bar.add_trace(go.Bar(
+                y=[row['Max Frequency PPM']],
+                x=[row['Language']],
+                name=f"'{row['Word']}'",
+                orientation='v',
+                marker=dict(color=shade_color),
+                hovertemplate=(
+                    f"<b>Word: '{row['Word']}'</b><br>"
+                    f"Language: {row['Language']}<br>"
+                    "Freq: %{y:.2f} μ<extra></extra>"
+                )
+            ))
 
     fig_bar.update_layout(
+        barmode='stack',
+        showlegend=False,
         template="plotly_dark",
-        yaxis_title="Word and Language", 
-        
-        # --- FIX: Use Unicode for the axis title ---
-        xaxis_title="Scaled Frequency (\u03bc)",
-        xaxis_type="linear", 
-        # --- END FIX ---
-        
-        height=600,
-        margin=dict(l=0, r=0, t=20, b=10, pad = 0),
+        xaxis_title="Language",
+        yaxis_title="Frequency (μ)",
+        xaxis=dict(tickangle=-45),
+        height=600,  # Fixed height for Plotly Chart
+        margin=dict(l=0, r=0, t=10, b=10, pad=0),
         font=dict(size=10),
         hoverlabel=dict(bgcolor="white", font_size=12, font_color="black"),
         yaxis=dict(automargin=True)
     )
-    # --- End Plotly Bar Chart Generation ---
 
-    # --- 3. Matplotlib Word Cloud Generation ---
     word_to_language_map = word_freq_max.set_index('word')['display_language'].to_dict()
     freq_dict = word_freq_max.set_index('word')['max_frequency'].to_dict()
 
     def custom_color_func(word, font_size, position, orientation, random_state=None, **kwargs):
-        language = word_to_language_map.get(word, 'English') 
+        language = word_to_language_map.get(word, 'English')
         return LANGUAGE_COLORS_MAP.get(language, 'gray')
 
+    # WordCloud is instantiated with a desired aspect ratio (e.g., 8:6)
     wc = WordCloud(
-        font_path = 'assets/NotoSansSC-Regular.ttf',
-        width=800, 
-        height=700, 
+        width=800,
+        height=600,  # Set WC internal height to match the desired final height ratio
         background_color='#0d1118',
         max_words=100,
         normalize_plurals=False
     ).generate_from_frequencies(freq_dict)
-    
+
     wc.recolor(color_func=custom_color_func)
 
-    fig_wc, ax = plt.subplots(figsize=(10, 6.25)) 
+    # Matplotlib figure size matches the desired ratio (10:7.5 is 4:3, for height 600px)
+    # Using 10:7.5 to provide a bit more breathing room than 10:6, but close to 600px final height
+    fig_wc, ax = plt.subplots(figsize=(10, 7.5)) 
     ax.imshow(wc, interpolation='bilinear')
     ax.axis('off')
-    
-    fig_wc.patch.set_facecolor('none')
-    fig_wc.patch.set_alpha(0.0)
-    ax.patch.set_facecolor('none')
-    ax.patch.set_alpha(0.0)
-    
+
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', bbox_inches='tight', transparent=True) 
-    plt.close(fig_wc) 
-    
-    plt.style.use('default') 
+    # Save with tight bounding box to minimize whitespace padding
+    plt.savefig(buf, format='png', bbox_inches='tight', transparent=True)
+    plt.close(fig_wc)
+
+    plt.style.use('default')
 
     return buf, data_for_display[['Word', 'Language', 'Max Frequency', 'Color']], fig_bar
 
