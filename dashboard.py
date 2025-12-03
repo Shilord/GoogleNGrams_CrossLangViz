@@ -127,7 +127,7 @@ def show_dashboard():
         ''', 
         unsafe_allow_html=True
     )
-    with sticky_container(mode="top", border=True):
+    with sticky_container(mode="top"):
         # Header with toggle button
         col_header, col_toggle = st.columns([0.9, 0.1])
         with col_header:
