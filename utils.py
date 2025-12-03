@@ -330,11 +330,11 @@ def create_timeseries(final_df):
                 active=0,
                 buttons=buttons,
                 direction="down",
-                pad={"r": 10, "t": 10},
+                pad={"r": 10, "t":10},
                 showactive=True,
-                x=0.2, # Position of the dropdown
+                x=1.05, # Position of the dropdown
                 xanchor="left",
-                y=1.17,
+                y=1.0,
                 yanchor="top",
                 bgcolor="#2b2b2b", # Dark button background
                 font=dict(color="white")
@@ -357,18 +357,15 @@ def create_timeseries(final_df):
         # Legend positioning
         legend=dict(
             yanchor="top",
-            y=1,
+            y=0.9,
             xanchor="right",
             x=1.2,
             bgcolor="rgba(0,0,0,0)" # Transparent legend
         ),
-        
-        # Add annotation for the Dropdown
-        annotations=[
-            dict(text="Filter Language:", x=0, y=1.13, xref="paper", yref="paper", showarrow=False, font=dict(size=14))
-        ],
-        
-        height=600 # Good height for viewing
+
+        height=600, 
+        margin=dict(l=20, r=20, t=25, b=20, pad=0),
+ # Good height for viewing
     )
 
     return fig
@@ -490,7 +487,7 @@ def create_word_cloud(final_df, year_range):
         yaxis_title="Frequency (μ)",
         xaxis=dict(tickangle=-45),
         height=600,  # Fixed height for Plotly Chart
-        margin=dict(l=0, r=0, t=20, b=10, pad=0),
+        margin=dict(l=0, r=0, t=10, b=10, pad=0),
         font=dict(size=10),
         hoverlabel=dict(bgcolor="white", font_size=12, font_color="black"),
         yaxis=dict(automargin=True)
