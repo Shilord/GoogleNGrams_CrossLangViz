@@ -357,9 +357,9 @@ def create_timeseries(final_df):
         # Legend positioning
         legend=dict(
             yanchor="top",
-            y=0.9,
+            y=0.85,
             xanchor="right",
-            x=1.2,
+            x=1.15,
             bgcolor="rgba(0,0,0,0)" # Transparent legend
         ),
 
@@ -555,6 +555,9 @@ def create_frequency_map_plotly(world_map, final_df, year):
         'word': lambda words: list(words.unique()),
         'is_synonym': 'first'
     }).reset_index()
+
+    # Convert to micro
+    freq_lookup_df['frequency'] = freq_lookup_df['frequency']*1e6
     
     # Create formatted word-frequency pairs for display
     word_freq_display = {}
@@ -592,7 +595,7 @@ def create_frequency_map_plotly(world_map, final_df, year):
     
     # Format frequency for display
     world_map['Frequency_Display'] = world_map['Frequency'].apply(
-        lambda x: f"{x*1e6:.2f}µ" if pd.notna(x) else "No data"
+        lambda x: f"{x:.2f}µ" if pd.notna(x) else "No data"
     )
     
     # Split into supported and unsupported languages
@@ -617,10 +620,12 @@ def create_frequency_map_plotly(world_map, final_df, year):
             title='Frequency',
             title_side='top',
             xanchor='left',
-            x=1.01,
+            x=0.8,
             y=0.5,
             len=0.7,
             thickness=15,
+            tickformat=".2f",
+            ticksuffix=" µ",
         ),
         customdata=list(zip(
             map_supported['Words_Display'],

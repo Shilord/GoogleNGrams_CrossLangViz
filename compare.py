@@ -5,10 +5,10 @@ import plotly.graph_objects as go
 from utils import * 
 def compare_words():
     # --- Header ---
-    _,col,_ = st.columns([0.5,0.9,0.1])
+    _,col,_ = st.columns([0.425,0.9,0.1])
     with col:
-        st.title("Compare Word Trends",anchor = False)
-    _,col2,_ = st.columns([0.3,1.2,0.1])
+        st.title("Compare Word Trends in the Same Language",anchor = False)
+    _,col2,_ = st.columns([0.541,1.2,0.1])
     with col2:
         st.caption("""
         Compare the historical popularity of multiple words simultaneously. Enter words below to generate a time-series comparison and a correlation heatmap.
@@ -23,9 +23,10 @@ def compare_words():
     with config_col1:
         # Language Selection
         selected_lang_name = st.selectbox(
-            "Select Language Corpus",
+            "Select Language",
             options=list(lang_to_lang_translation.keys()),
-            index=0
+            index=0,
+            help='Select the language of the words to be compared.'
         )
         selected_lang_code = lang_to_lang_translation[selected_lang_name]
 
@@ -35,12 +36,14 @@ def compare_words():
             "Select Year Range",
             min_value=MIN_YEAR,
             max_value=MAX_YEAR,
-            value=(1800, 2019)
+            value=(1800, 2019),
+            help='Choose the time span for this comparison.'
         )
 
     with config_col3:
         # Smoothing Slider
-        smoothing = st.slider("Smoothing (Rolling Avg)", 1, 10, 5)
+        smoothing = st.slider("Smoothing (Rolling Avg)", 1, 10, 5, 
+                              help='Choose how much smoothing is done for the time series graph. Higher values help to reduce noise, while lower values will better display frequency spikes and other details.')
 
     st.divider()
 
@@ -83,7 +86,7 @@ def compare_words():
                     filtered_df = raw_df.loc[mask].copy()
 
                     # --- VISUALIZATION 1: Time Series ---
-                    st.subheader("Frequency Over Time",anchor = False)
+                    st.subheader("Comparing Frequencies Over Time",anchor = False, help='Hover over for exact frequency values.')
                     
                     # Apply Smoothing
                     filtered_df['freq_smooth'] = filtered_df.groupby('word')['frequency'].transform(
@@ -121,8 +124,8 @@ def compare_words():
                     st.plotly_chart(fig_ts, use_container_width=True)
 
                     # --- VISUALIZATION 2: Correlation Heatmap ---
-                    st.subheader("Correlation Matrix")
-                    st.caption("How closely do the trends of these words match? (1 = Perfect Match, -1 = Inverse Trend)")
+                    st.subheader("Correlation Matrix", anchor=False, help="How closely do the trends of these words match? (1 = Perfect Match, -1 = Perfect Inverse Trend)")
+                    #st.caption("How closely do the trends of these words match? (1 = Perfect Match, -1 = Inverse Trend)")
 
                     # Pivot data for correlation: Rows=Year, Cols=Words, Values=Frequency
                     pivot_df = filtered_df.pivot(index='year', columns='word', values='freq_smooth')

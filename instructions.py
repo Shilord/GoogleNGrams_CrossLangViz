@@ -9,6 +9,14 @@ def show_instructions():
         font-family: 'Source Sans Pro', sans-serif;
         padding: 10px 0;
     }
+    .instruction-title {
+        color: #ffffff;
+        margin-top: 0px;
+        margin-bottom: 10px;
+        font-size: 3rem;
+        font-weight: 800;
+        text-align: center;
+    }
     .instruction-header {
         color: #4da6ff;
         margin-top: 30px;
@@ -35,14 +43,19 @@ def show_instructions():
         color: #FF4B4B;
         font-size: 1.1rem;
     }
-</style>
 """, unsafe_allow_html=True)
 
     _, col_center, _ = st.columns([1, 6, 1])
 
     with col_center:
         # Note: The strings below are NOT indented to avoid the "Code Block" issue
-        st.markdown('<h1 style="text-align: center;">How to Use This Dashboard</h1>', unsafe_allow_html=True)
+        
+        # st.markdown('<h1 style="text-align: center;">How to Use This Dashboard</h1>', unsafe_allow_html=True)
+        st.markdown("""
+                    <div class="instruction-title">
+                        How to Use This Dashboard
+                    </div>
+                    """, unsafe_allow_html=True)
         
         st.markdown("""
 <div class="centered-container">
@@ -59,7 +72,7 @@ def show_instructions():
     <hr style="border-top: 1px solid #333; width: 50%; margin: 20px auto;">
     <div class="instruction-header">Definitions</div>
     <p class="instruction-text">
-        <b>What is an Ngram?</b><br>
+        <b>What is an N-gram?</b><br>
         N-grams have a more nuanced and complex definition in linguistics and corpus analysis, but for the 
     purpose of this dashboard, can be understood as any word or string of words (a phrase). 
         <br><br>
@@ -106,3 +119,5 @@ def show_instructions():
     </div>
 </div>
 """, unsafe_allow_html=True)
+        
+#st.video("guide.mp4")        
