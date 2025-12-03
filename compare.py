@@ -5,11 +5,14 @@ import plotly.graph_objects as go
 from utils import * 
 def compare_words():
     # --- Header ---
-    st.title("Compare Word Trends")
-    st.caption("""
-    Compare the historical popularity of multiple words simultaneously.  
-    Enter words below to generate a time-series comparison and a correlation heatmap.
-    """)
+    _,col,_ = st.columns([0.5,0.9,0.1])
+    with col:
+        st.title("Compare Word Trends",anchor = False)
+    _,col2,_ = st.columns([0.3,1.2,0.1])
+    with col2:
+        st.caption("""
+        Compare the historical popularity of multiple words simultaneously. Enter words below to generate a time-series comparison and a correlation heatmap.
+        """)
     
     st.divider()
 
@@ -80,7 +83,7 @@ def compare_words():
                     filtered_df = raw_df.loc[mask].copy()
 
                     # --- VISUALIZATION 1: Time Series ---
-                    st.subheader("Frequency Over Time")
+                    st.subheader("Frequency Over Time",anchor = False)
                     
                     # Apply Smoothing
                     filtered_df['freq_smooth'] = filtered_df.groupby('word')['frequency'].transform(

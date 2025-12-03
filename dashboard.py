@@ -1,6 +1,7 @@
 import streamlit as st
 from utils import *
 from typing import Literal
+from tooltips import *
 
 
 MARGINS = {
@@ -10,11 +11,19 @@ MARGINS = {
 
 STICKY_CONTAINER_HTML = """
 <style>
-div[data-testid="stVerticalBlock"] div:has(div.fixed-header-{i}) {{
+div[data-testid="stVerticalBlock"]:has(> div.element-container > div.stMarkdown div.fixed-header-{i}) {{
     position: sticky;
     {position}: {margin};
     background-color: #0d1118;
     z-index: 999;
+    border: 1px solid #262730;
+    border-radius: 0.8rem;
+    
+    /* Padding now applies only to this specific box */
+    padding-left: 2rem;
+    padding-bottom: 1rem;
+    padding-top: 1rem;
+    padding-right: 1rem;
 }}
 </style>
 <div class='fixed-header-{i}'/>
@@ -27,7 +36,6 @@ count = 0
 def sticky_container(
     *,
     height: int | None = None,
-    border: bool | None = None,
     mode: Literal["top", "bottom"] = "top",
     margin: str | None = None,
 ):
@@ -38,7 +46,7 @@ def sticky_container(
     html_code = STICKY_CONTAINER_HTML.format(position=mode, margin=margin, i=count)
     count += 1
 
-    container = st.container(border=border)
+    container = st.container(height=height, border=False)
     container.markdown(html_code, unsafe_allow_html=True)
     return container
 
@@ -115,7 +123,7 @@ def show_dashboard():
     load_css('assets/styles.css')
     _,col_1,_ = st.columns([3.7,6,1])
     with col_1:
-        st.title('Words Across Borders')
+        st.title('Words Across Borders',anchor = False)
     st.markdown(
         '''
         <p style="font-size: 18px; color: #a8a8a8;text-align: left">
@@ -129,9 +137,9 @@ def show_dashboard():
     )
     with sticky_container(mode="top"):
         # Header with toggle button
-        col_header, col_toggle = st.columns([0.9, 0.1])
+        col_header, col_toggle = st.columns([0.9, 0.1], vertical_alignment="bottom")
         with col_header:
-            st.subheader("Search Controls")
+            st.subheader("Search Controls",anchor = False)
             
         with col_toggle:
             # st.write("")
@@ -189,7 +197,7 @@ def show_dashboard():
                     )
                     st.session_state.context_topics = context_topics
 
-            st.subheader("Language and Synonym Settings")
+            st.subheader("Language and Synonym Settings",anchor = False)
             col_lang, col_synonym_toggle, col_num_synonyms = st.columns([3.5, 1.5, 1]) 
             
             def update_language_state():
@@ -356,7 +364,7 @@ def show_dashboard():
 
     if st.session_state['search_run']:
         if st.session_state['is_comparison']==False:
-            st.subheader("Historical Date Filter")
+            st.subheader("Historical Date Filter",anchor = False)
             year_range = st.slider(
                 "Select Target Year",
                 min_value=MIN_YEAR,
@@ -369,12 +377,7 @@ def show_dashboard():
             world_map = empty_map.copy(deep=True)
             _,col1,_ = st.columns([0.3,0.6,0.1])
             with col1: 
-                st.subheader(f"Interactive World Heatmap for Word Frequencies - Year {year_range}",help = """"
-                            Explore how your search term's usage varies across countries and languages in this interactive 
-                            map via color intensity. Hover over each country to see specifics like primary language, and 
-                            move the date slider to compare trends over time. Note that the map is based on primary languages 
-                            spoken by each country in 2015.""")
-                st.button('?', help='This button does something amazing!')
+                st.subheader(f"Interactive World Heatmap for Word Frequencies - Year {year_range}",help = world_map_tooltip,anchor = False)
             fig = create_frequency_map_plotly(world_map, st.session_state['final_data'], year_range)
             if fig:
                 st.plotly_chart(fig, use_container_width=True,config={'displayModeBar': False})
@@ -387,10 +390,7 @@ def show_dashboard():
             # --- END BAR CHART INTEGRATION ---
 
             with col_chart_left:
-                st.subheader(f"Stacked Bar Graph: Words Frequencies by Language - Year {year_range}", help = """
-                            Compare how much a concept (search term + synonyms) is written about in each language. 
-                            Hover over each block to see the exact frequencies for that word/phrase. 
-                            """ )
+                st.subheader(f"Bar Graph: Frequencies by Language - Year {year_range}", help = bar_graph_tooltip ,anchor = False)
                 # 2. Display the Plotly Bar Chart
                 if fig_bar:
                     st.plotly_chart(fig_bar, use_container_width=True)
@@ -398,22 +398,12 @@ def show_dashboard():
                     st.text("Bar Graph here") # This will now be replaced by the chart if data exists
 
             with col_chart_right:
-                st.subheader(f"Word Cloud: Words by Frequency - Year {year_range}", help = """
-                            Observe the popularity of each translation or synonym in different languages.  
-                            The larger the word or phrase, the more frequently it is used, while  
-                            the color corresponds to what language it's from (see bar graph colors). 
-                            """ )
+                st.subheader(f"Word Cloud: Words by Frequency - Year {year_range}", help = word_cloud_tooltip, anchor = False )
                 if word_cloud_image_buffer:
                     st.image(word_cloud_image_buffer, use_container_width=True)
         
-        _,col2,_ = st.columns([0.4,0.5,0.1])
+        _,col2,_ = st.columns([0.3,0.5,0.1])
         with col2: 
-            st.subheader(f"Time Series: Word Frequency Over Time", help = """
-                         See how often your input term, along with all translations and synonyms in other 
-                         languages, is used over time in this interactive smoothed time series graph 
-                         (5-year moving average to reduce noise). Hover over lines, show/hide entries by 
-                         clicking in the legend, use the language filter dropdown, or drag the range slider 
-                         at the bottom to select time frame.
-                         """ )
+            st.subheader(f"Time Series: Word Frequency Over Time", help = timeseries_tooltip ,anchor = False)
         time_chart = create_timeseries(st.session_state['final_data'])
         st.plotly_chart(time_chart, use_container_width=True)

@@ -25,13 +25,13 @@ tab_from_url = query_params.get("tab", None)
 with st.sidebar:
     default_idx = 0
     if tab_from_url == "User Manual":
-        default_idx = 2
+        default_idx = 3
     elif tab_from_url == "Fun Facts":
         default_idx = 1
     selected_tab = option_menu(
         menu_title = "Navigation",
-        options = ["Dashboard","Fun Facts","User Manual","Compare Words"],
-        icons = ['file-earmark-bar-graph','bullseye','book','c-square'],
+        options = ["Dashboard","Fun Facts","Compare Words","User Manual"],
+        icons = ['file-earmark-bar-graph','bullseye','c-square','book'],
         menu_icon = 'globe-americas',
         default_index = default_idx
 

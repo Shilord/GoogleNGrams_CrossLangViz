@@ -49,9 +49,9 @@ def preload_cards(images):
     return cards
 
 def show_fun_facts():
-    _,col,_ = st.columns([0.27,0.5,0.1])
+    _,col,_ = st.columns([0.4,0.5,0.1])
     with col:
-        st.title("Fun Facts Gallery")
+        st.title("Fun Facts Gallery",anchor = False)
     
     # Load CSS
     st.markdown("""

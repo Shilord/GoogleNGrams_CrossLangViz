@@ -74,6 +74,3 @@ div[data-testid="stNumberInput"] {
     margin-top: -10px !important;
 }
 
-[data-testid="stHeaderActionElements"] {
-    display: none;
-}
