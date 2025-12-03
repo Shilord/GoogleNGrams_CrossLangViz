@@ -7,3 +7,4 @@ deep-translator
 detectlanguage
 streamlit-option-menu
 wordcloud
+st_ant_carousel
