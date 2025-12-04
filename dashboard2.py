@@ -84,41 +84,29 @@ def sticky_container(
     container.markdown(html_code, unsafe_allow_html=True)
     return container
 
-def custom_subheader(text, help_text=None):
-    st.markdown("""
-    <style>
-    .custom-subheader {
-        color: #ffffff;
-        font-size: 1.75rem;
-        font-weight: 650;
-        margin-top: 25px;
-        margin-bottom: 6px;
-        text-align: center;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+# Only seems to work locally?
+# def custom_subheader(text, help_text=None):
+#     st.markdown("""
+#     <style>
+#     .custom-subheader {
+#         color: #ffffff;
+#         font-size: 1.75rem;
+#         font-weight: 650;
+#         margin-top: 25px;
+#         margin-bottom: 6px;
+#         text-align: center;
+#     }
+#     </style>
+#     """, unsafe_allow_html=True)
     
-    """Custom subheader matching st.subheader styling with optional help tooltip"""
-    st.markdown(
-        f"<div class='custom-subheader'>{text}</div>",
-        unsafe_allow_html=True,
-        help=help_text
-    )
+#     """Custom subheader matching st.subheader styling with optional help tooltip"""
+#     st.markdown(
+#         f"<div class='custom-subheader'>{text}</div>",
+#         unsafe_allow_html=True,
+#         help=help_text
+#     )
 
 def show_dashboard():
-
-    st.markdown("""
-    <style>
-    .custom-subheader {
-        color: #ffffff;
-        font-size: 1.75rem;
-        font-weight: 650;
-        margin-top: 25px;
-        margin-bottom: 6px;
-        text-align: center;
-    }
-    </style>
-    """, unsafe_allow_html=True)
         
     languages = ['English', 'Chinese', 'French', 'German', 'Italian', 'Russian', 'Spanish']
 
@@ -477,7 +465,8 @@ def show_dashboard():
 
             world_map = empty_map.copy(deep=True)
 
-            custom_subheader(f"Interactive World Heatmap for Word Frequencies - Year {year_range}",help_text = world_map_tooltip)
+            #custom_subheader(f"Interactive World Heatmap for Word Frequencies - Year {year_range}",help_text = world_map_tooltip)
+            st.subheader(f"Word Cloud: Words by Frequency - Year {year_range}", anchor=False, help=world_map_tooltip)
 
             fig = create_frequency_map_plotly(world_map, st.session_state['final_data'], year_range)
             if fig:
@@ -491,7 +480,8 @@ def show_dashboard():
             # --- END BAR CHART INTEGRATION ---
 
             with col_chart_left:
-                custom_subheader(f"Bar Graph: Frequencies by Language - Year {year_range}",help_text = bar_graph_tooltip)
+                #custom_subheader(f"Bar Graph: Frequencies by Language - Year {year_range}",help_text = bar_graph_tooltip)
+                st.subheader(f'Bar Graph: Frequencies by Language - Year {year_range}', anchor=False, help=bar_graph_tooltip)
                 # 2. Display the Plotly Bar Chart
                 if fig_bar:
                     st.plotly_chart(fig_bar, use_container_width=True)
@@ -499,23 +489,16 @@ def show_dashboard():
                     st.text("Bar Graph here") # This will now be replaced by the chart if data exists
 
             with col_chart_right:
-                custom_subheader(f"Word Cloud: Words by Frequency - Year {year_range}",help_text = word_cloud_tooltip)
+                #custom_subheader(f"Word Cloud: Words by Frequency - Year {year_range}",help_text = word_cloud_tooltip)
+                st.subheader(f"Word Cloud: Words by Frequency - Year {year_range}", anchor=False, help=word_cloud_tooltip)
                 if word_cloud_image_buffer:
                     st.image(word_cloud_image_buffer, use_container_width=True)
         
        
         # _,col2,_ = st.columns([0.3,0.5,0.05])
         # with col2: 
-
-        #custom_subheader(f"Time Series: Word Frequency Over Time",help_text = f"See how often your input term, along with all translations and synonyms in other languages, is used over time in this interactive smoothed time series graph (5-year moving average to reduce noise). Hover over lines, show/hide entries by clicking in the legend, use the language filter dropdown, or drag the range slider at the bottom to select time frame.")
-        
-        st.markdown(
-        """
-        Time Series: Word Frequency Over Time
-        """,
-        unsafe_allow_html=True,
-        help= "See how often your input term, along with all translations and synonyms in other languages, is used over time in this interactive smoothed time series graph (5-year moving average to reduce noise). Hover over lines, show/hide entries by clicking in the legend, use the language filter dropdown, or drag the range slider at the bottom to select time frame."
-        )
+        #custom_subheader(f"Time Series: Word Frequency Over Time",help_text = timeseries_tooltip)
+        st.subheader(f'Time Series: Word Frequency Over Time', anchor=False, help=timeseries_tooltip)
 
         time_chart = create_timeseries(st.session_state['final_data'])
         st.plotly_chart(time_chart, use_container_width=True)
