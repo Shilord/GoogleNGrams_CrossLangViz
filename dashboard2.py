@@ -147,11 +147,30 @@ def show_dashboard():
     empty_map = load_empty_map()
     
     load_css('assets/styles.css')
-    st.markdown("<h1 style='text-align: center;'>Words Across Borders</h1>", unsafe_allow_html=True)
+
+    # Styling then writing title
+    st.markdown("""
+    <style>
+    .title {
+        color: #ffffff;
+        margin-top: 0px;
+        margin-bottom: 10px;
+        font-size: 3rem;
+        font-weight: 800;
+        text-align: center;
+    }
+    </style>
+""", unsafe_allow_html=True)
+    st.markdown("""
+                    <div class="title">
+                        Words Across Borders
+                    </div>
+                    """, unsafe_allow_html=True)
     
+    #Subtitle
     st.markdown(
         '''
-        <p style="font-size: 18px; color: #a8a8a8;text-align: center">
+        <p style="font-size: 18px; color: #a8a8a8; text-align: center">
             Visualizing word frequencies over time and space via Google N-grams. An interactive exploration of the historical popularity of words, mapping their trends across languages to reveal the shifting landscape of human thought. See 
             <a href="?tab=User Manual" target="_self" style="color: #4da6ff; text-decoration: none;">
                 User Manual
@@ -160,6 +179,7 @@ def show_dashboard():
         ''', 
         unsafe_allow_html=True
     )
+
     with sticky_container(mode="top", border=True):
         # Header with toggle button
         col_header, col_toggle = st.columns([0.9, 0.1], vertical_alignment="bottom")
@@ -423,7 +443,9 @@ def show_dashboard():
             )
 
             world_map = empty_map.copy(deep=True)
+
             custom_subheader(f"Interactive World Heatmap for Word Frequencies - Year {year_range}",help_text = world_map_tooltip)
+
             fig = create_frequency_map_plotly(world_map, st.session_state['final_data'], year_range)
             if fig:
                 st.plotly_chart(fig, use_container_width=True,config={'displayModeBar': True})
