@@ -794,12 +794,12 @@ def custom_subheader3(text, help_text=None):
         font-weight: 650;
         margin-top: 25px;
         margin-bottom: 6px;
-        text-align: center; !important;
+        text-align: center !important;
     }
     /* Target the parent container when help is present */
     .element-container:has(.custom-subheader2) {
-        display: flex; !important; 
-        justify-content: center; !important;
+        display: flex !important; 
+        justify-content: center !important;
         width: 100% !important;
     }
     </style>
