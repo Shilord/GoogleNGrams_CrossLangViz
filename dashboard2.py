@@ -105,6 +105,18 @@ def custom_subheader(text, help_text=None):
     )
 
 def show_dashboard():
+
+    st.markdown("""
+    <style>
+    .custom-subheader {
+        color: #ffffff;
+        font-size: 1.75rem;
+        font-weight: 650;
+        margin-top: 25px;
+        margin-bottom: 6px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
         
     languages = ['English', 'Chinese', 'French', 'German', 'Italian', 'Russian', 'Spanish']
 
@@ -492,6 +504,14 @@ def show_dashboard():
        
         # _,col2,_ = st.columns([0.3,0.5,0.05])
         # with col2: 
-        custom_subheader(f"Time Series: Word Frequency Over Time",help_text = f"See how often your input term, along with all translations and synonyms in other languages, is used over time in this interactive smoothed time series graph (5-year moving average to reduce noise). Hover over lines, show/hide entries by clicking in the legend, use the language filter dropdown, or drag the range slider at the bottom to select time frame.")
+
+        #custom_subheader(f"Time Series: Word Frequency Over Time",help_text = f"See how often your input term, along with all translations and synonyms in other languages, is used over time in this interactive smoothed time series graph (5-year moving average to reduce noise). Hover over lines, show/hide entries by clicking in the legend, use the language filter dropdown, or drag the range slider at the bottom to select time frame.")
+        
+        st.markdown(
+        f"<div class='custom-subheader'>Time Series: Word Frequency Over Time</div>",
+        unsafe_allow_html=True,
+        help= timeseries_tooltip
+        )
+
         time_chart = create_timeseries(st.session_state['final_data'])
         st.plotly_chart(time_chart, use_container_width=True)
