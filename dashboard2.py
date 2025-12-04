@@ -101,7 +101,7 @@ def custom_subheader(text, help_text=None):
     st.markdown(
         f"<div class='custom-subheader'>{text}</div>",
         unsafe_allow_html=True,
-        help=help_text     # Streamlit tooltip still works
+        #help=help_text     # Streamlit tooltip still works
     )
 
 def show_dashboard():
