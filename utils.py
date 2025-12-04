@@ -80,17 +80,21 @@ def set_params(word, corpus, min_year, max_year):
     return params
 
 # function to get direct translations for words
-def get_languages(input, input_lang, langs_selected):
-    df = pd.DataFrame({'word' : input,
-                       'language' : input_lang}, index = [0])
-    for lang in langs_selected:
-        if lang != input_lang:
-            translator = GoogleTranslator(source = input_lang, target = lang)
-            new_entry = pd.DataFrame({'word' : translator.translate(input),
-                            'language' : lang}, index = [0])
-            df = pd.concat([df, new_entry], ignore_index = True)
-            df['language'] = df['language'].replace('zh-CN', 'zh')
-    return df
+# def get_languages(input, input_lang, langs_selected):
+#     df = pd.DataFrame({'word' : input,
+#                        'language' : input_lang}, index = [0])
+#     for lang in langs_selected:
+#         if lang != input_lang:
+#             if input_lang == 'zh':
+#                 input_lang = 'zh-CN'
+#             print("ABC" + input_lang)
+#             print(lang)
+#             translator = GoogleTranslator(source = input_lang, target = lang)
+#             new_entry = pd.DataFrame({'word' : translator.translate(input),
+#                             'language' : lang}, index = [0])
+#             df = pd.concat([df, new_entry], ignore_index = True)
+#             df['language'] = df['language'].replace('zh-CN', 'zh')
+#     return df
 
 # batch translate
 def get_languages_batch(input, input_lang, langs_selected):
@@ -102,6 +106,10 @@ def get_languages_batch(input, input_lang, langs_selected):
             df = pd.concat([df, current], ignore_index = True)
     for lang in langs_selected:
         if lang != input_lang:
+            if input_lang == 'zh':
+                input_lang = 'zh-CN'
+            print("ABC" + input_lang)
+            print(lang)
             translator = GoogleTranslator(source = input_lang, target = lang)
             new_words = translator.translate_batch(input)
             for i in range(len(new_words)):
@@ -154,9 +162,9 @@ def get_frequency(df):
 def get_translations_batch(word, input_lang, langs_needed):
     return get_frequency(get_languages_batch(word, input_lang, langs_needed))
 
-# main function to run (combines above functions)
-def get_translations(word, input_lang, langs_needed):
-    return get_frequency(get_languages(word, input_lang, langs_needed))
+# # main function to run (combines above functions)
+# def get_translations(word, input_lang, langs_needed):
+#     return get_frequency(get_languages(word, input_lang, langs_needed))
 
 
 
@@ -359,7 +367,7 @@ def create_timeseries(final_df):
             yanchor="top",
             y=0.85,
             xanchor="right",
-            x=1.15,
+            x=1.2,
             bgcolor="rgba(0,0,0,0)" # Transparent legend
         ),
 
@@ -399,7 +407,7 @@ def create_word_cloud(final_df, year_range):
     # High-contrast shades for stacked bar chart visibility
     COLORSCALE_SHADES = {
         'English': ['#F4D03F', '#E1B100', '#C7A325'],
-        'Spanish': ['#FF6B6B', '#D84C4C', '#A93226'],
+        'Spanish': ['#FF6B6B', '#D84C4C', '#B02F2F'],
         'French':  ['#54A0FF', '#337FCC', '#1D5C99'],
         'German':  ['#9B59B6', '#7F48A0', '#66378A'],
         'Italian': ['#FF9F43', '#D87B22', '#A04000'],
@@ -486,8 +494,8 @@ def create_word_cloud(final_df, year_range):
         xaxis_title="Language",
         yaxis_title="Frequency (μ)",
         xaxis=dict(tickangle=-45),
-        height=600,  # Fixed height for Plotly Chart
-        margin=dict(l=0, r=0, t=10, b=10, pad=0),
+        height=600,
+        margin=dict(l=0, r=0, t=20, b=10, pad=0),
         font=dict(size=10),
         hoverlabel=dict(bgcolor="white", font_size=12, font_color="black"),
         yaxis=dict(automargin=True)
@@ -500,10 +508,12 @@ def create_word_cloud(final_df, year_range):
         language = word_to_language_map.get(word, 'English')
         return LANGUAGE_COLORS_MAP.get(language, 'gray')
 
-    # WordCloud is instantiated with a desired aspect ratio (e.g., 8:6)
+    # --- FIX: Set the font_path and fixed random_state for consistent rendering ---
     wc = WordCloud(
+        font_path='assets/NotoSansSC-Regular.ttf', # MUST BE UNCOMMENTED FOR CHINESE
+        random_state=42, # Fixes layout inconsistency
         width=800,
-        height=600,  # Set WC internal height to match the desired final height ratio
+        height=600,
         background_color='#0d1118',
         max_words=100,
         normalize_plurals=False
@@ -511,14 +521,12 @@ def create_word_cloud(final_df, year_range):
 
     wc.recolor(color_func=custom_color_func)
 
-    # Matplotlib figure size matches the desired ratio (10:7.5 is 4:3, for height 600px)
-    # Using 10:7.5 to provide a bit more breathing room than 10:6, but close to 600px final height
+    # Matplotlib figure size matches the desired ratio (for height 600px)
     fig_wc, ax = plt.subplots(figsize=(10, 7.5)) 
     ax.imshow(wc, interpolation='bilinear')
     ax.axis('off')
 
     buf = io.BytesIO()
-    # Save with tight bounding box to minimize whitespace padding
     plt.savefig(buf, format='png', bbox_inches='tight', transparent=True)
     plt.close(fig_wc)
 
@@ -620,7 +628,7 @@ def create_frequency_map_plotly(world_map, final_df, year):
             title='Frequency',
             title_side='top',
             xanchor='left',
-            x=0.8,
+            x=1.00,
             y=0.5,
             len=0.7,
             thickness=15,

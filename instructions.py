@@ -63,10 +63,10 @@ def show_instructions():
     <p class="instruction-text">
         We were initially inspired by the question: "How do different cultures emphasize different ideas?" 
     In our iterative search for relevant large datasets and refining this question, we eventually decided 
-    on the Google Ngram dataset and the question "How does the usage of words or phrases vary over time 
+    on the Google Ngram dataset. This took us on a journey to answer the question "How does the usage of words or phrases vary over time 
     between different countries or languages?" The Google Ngram dataset is a massive collection of word 
     frequency data, derived from countless digitized books and other literature sources in the Google Books 
-    corpus that includes data for several languages. As such, by visualizing how these frequencies change 
+    corpus which includes data for several languages. As such, by visualizing how these frequencies change 
     over time and for different languages, one can observe linguistic and cultural trends.        
     </p>
     <hr style="border-top: 1px solid #333; width: 50%; margin: 20px auto;">

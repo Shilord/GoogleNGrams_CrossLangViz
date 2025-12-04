@@ -104,11 +104,11 @@ def show_dashboard():
         st.session_state['final_data'] = default_df
         st.session_state['search_run'] = True 
         st.session_state.target_word = "example" 
-        st.session_state.input_language = "English"
+        st.session_state.input_language = "Auto Detect"
         st.session_state.selected_languages = ['English', 'Chinese', 'French', 'German', 'Italian', 'Russian', 'Spanish']
         st.session_state.synonyms_choice = "Yes"
         st.session_state.num_synonyms = 3
-        st.session_state.pos_tag = "Noun"
+        st.session_state.pos_tag = "None"
         st.session_state.context_topics = ""
         st.session_state['is_comparison'] = False
         st.session_state['is_phrase']=False
@@ -141,31 +141,38 @@ def show_dashboard():
     #Build world map
     @st.cache_resource
     def load_empty_map():
+        # empty_map = gpd.read_file("soc_071_world_languages.zip") 
+        # empty_map['geometry'] = empty_map['geometry'].simplify(tolerance=0.03, preserve_topology=True)
+
+        # # Cleaning map data
+        # empty_map = empty_map.loc[:, ['COUNTRY', 'FIRST_OFFI', 'geometry']]
+        # empty_map = empty_map.rename(columns={'COUNTRY': 'Country', 'FIRST_OFFI': 'Primary Language (based on 2015)'})
+        # empty_map['Primary Language (based on 2015)'] = empty_map['Primary Language (based on 2015)'].replace({'English': 'English', 'Spanish': 'Español', 'French': 'Français', 'German': 'Deutsch', 'Italian': 'Italiano', 'Russian': 'Русский', 'Standard Chinese or Mandarin': '中文', 'Hebrew': 'עִברִית'})
+        # map = empty_map.copy(deep=True)
+        # return map
         map = pd.read_csv('empty_map.csv')
         return map
 
     empty_map = load_empty_map()
 
     load_css('assets/styles.css')
-    _,col_1,_ = st.columns([4.665,6,1])
-    with col_1:
-        st.title('Words Across Borders',anchor = False)
+    st.markdown("<h1 style='text-align: center;'>Words Across Borders</h1>", unsafe_allow_html=True)
     st.markdown(
         '''
         <p style="font-size: 18px; color: #a8a8a8;text-align: center">
-            Visualizing word frequencies over time and space via Google N-grams: an interactive exploration of the historical popularity of words, mapping their trajectory to reveal the shifting landscape of human thought over several languages. \n See 
+            Visualizing word frequencies over time and space via Google N-grams. An interactive exploration of the historical popularity of words, mapping their trajectory across linguistic borders to reveal the shifting landscape of human thought. \n For more instructions, see the
             <a href="?tab=User Manual" target="_self" style="color: #4da6ff; text-decoration: none;">
-                User Manual.
-            </a> 
+                User Manual
+            </a>
         </p>
         ''', 
         unsafe_allow_html=True
     )
-    with sticky_container(mode="top"):
+    with sticky_container(mode="top", border=True):
         # Header with toggle button
         col_header, col_toggle = st.columns([0.9, 0.1], vertical_alignment="bottom")
         with col_header:
-            st.subheader("Search Controls",anchor = False, help='Start your query by playing with these controls.')
+            st.subheader("Search Controls",anchor = False)
             
         with col_toggle:
             # st.write("")
@@ -190,7 +197,7 @@ def show_dashboard():
                     value=st.session_state.target_word,
                     key="target_word_input",
                     label_visibility="hidden", 
-                    placeholder="Enter Any Word or Phrase Here"
+                    placeholder="Enter Keyword"
                 )
                 st.session_state.target_word = target_word
 
@@ -198,7 +205,7 @@ def show_dashboard():
                 with st.expander("Add More Context (Optional)"):
                     input_language = st.selectbox(
                         "Input Language",
-                        languages,
+                        ['Auto Detect'] + languages,
                         index=languages.index(st.session_state.input_language) if st.session_state.input_language in languages else 0,
                         key="input_language_select",
                         help="The language of the word which you inputted. More accurate settings assigned here leads to better synonym and translation results."
@@ -244,8 +251,7 @@ def show_dashboard():
                     options_list, 
                     default=st.session_state['selected_languages'], 
                     on_change=update_language_state,
-                    key='lang_select_widget',
-                    help='Select which languages to be included in the analysis.')
+                    key='lang_select_widget')
 
                 if ALL_LANGUAGES_OPTION in selected_langs:
                     filter_langs = languages 
@@ -256,13 +262,14 @@ def show_dashboard():
                 st.session_state['filter_langs'] = filter_langs
 
             with col_synonym_toggle:
+                st.write("Include Synonyms?")
                 synonyms_choice = st.radio(
-                    "Include Synonyms?",
+                    "Synonyms",
                     ["Yes", "No"],
                     index=0 if st.session_state.synonyms_choice == "Yes" else 1,
                     horizontal=True,
-                    key="synonym_radio_input",
-                    help='Selecting yes may better capture the various meanings or context of your search term, whereas selecting no results in the singular most direct translation.'
+                    label_visibility="collapsed",
+                    key="synonym_radio_input"
                 )
                 st.session_state.synonyms_choice = synonyms_choice
 
@@ -270,14 +277,14 @@ def show_dashboard():
             num_synonyms = 0
             if st.session_state.synonyms_choice == "Yes":
                 with col_num_synonyms:
-                    #st.caption("Synonyms Count") 
+                    st.caption("Synonyms Count") 
                     num_synonyms = st.number_input(
                         "Synonyms Count",
                         min_value=1,
                         max_value=20,
                         value=st.session_state.num_synonyms,
                         step=1,
-                        #label_visibility="collapsed",
+                        label_visibility="collapsed",
                         key="num_synonyms_number_input",
                         help="Maximum number of related synonyms to include in the search."
                     )
@@ -359,7 +366,7 @@ def show_dashboard():
 
             #Detect language of input keyword
             if st.session_state['is_comparison']==False:
-                if input_language==None:
+                if input_language=='Auto Detect':
                     input_language = detect_language(target_word)
                 else: 
                     #Convert input language from format "English" to 'en'
@@ -399,12 +406,14 @@ def show_dashboard():
                 max_value=MAX_YEAR,
                 value=2000, 
                 step=1,
-                help="Select a year for analysis."
+                help="Select a single specific year for the corpus analysis."
             )
 
             world_map = empty_map.copy(deep=True)
-            _,col1,_ = st.columns([0.335,0.6,0.1])
+            _,col1,_ = st.columns([0.3,0.6,0.1])
             with col1: 
+            # st.markdown("<h1 style='text-align: center;'>Words Across Borders</h1>", unsafe_allow_html=True)
+            # st.markdown(f"<h3 style='text-align: center;'>Interactive World Heatmap for Word Frequencies - Year {year_range}</h3>", unsafe_allow_html=True,help = world_map_tooltip)
                 st.subheader(f"Interactive World Heatmap for Word Frequencies - Year {year_range}",help = world_map_tooltip,anchor = False)
             fig = create_frequency_map_plotly(world_map, st.session_state['final_data'], year_range)
             if fig:
@@ -431,8 +440,8 @@ def show_dashboard():
                     st.image(word_cloud_image_buffer, use_container_width=True)
         
        
-        _,col2,_ = st.columns([0.33,0.5,0.05])
+        _,col2,_ = st.columns([0.3,0.5,0.05])
         with col2: 
-            st.subheader(f"Time Series: Word Frequency Over Time", help = timeseries_tooltip, anchor = False)
+            st.subheader(f"Time Series: Word Frequency Over Time", help = timeseries_tooltip ,anchor = False)
         time_chart = create_timeseries(st.session_state['final_data'])
         st.plotly_chart(time_chart, use_container_width=True)
