@@ -51,10 +51,25 @@ def preload_cards(images):
     return cards
 
 def show_fun_facts():
-    _,col,_ = st.columns([0.38,0.5,0.1])
-    with col:
-        custom_subheader(f"Fun Facts Gallery",size = 'h1')
-        # st.title("Fun Facts Gallery",anchor = False)
+
+    # Style then write title
+    st.markdown("""
+    <style>
+    .title {
+        color: #ffffff;
+        margin-top: 0px;
+        margin-bottom: 10px;
+        font-size: 3rem;
+        font-weight: 800;
+        text-align: center;
+    }
+    </style>
+""", unsafe_allow_html=True)
+    st.markdown("""
+                    <div class="title">
+                        Fun Facts Gallery
+                    </div>
+                    """, unsafe_allow_html=True)
     
     # Load CSS
     st.markdown("""

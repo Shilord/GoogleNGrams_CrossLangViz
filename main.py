@@ -1,5 +1,5 @@
 import streamlit as st
-from dashboard2 import show_dashboard
+from dashboard3 import show_dashboard
 from fun_facts2 import show_fun_facts
 from instructions import show_instructions
 from compare import compare_words

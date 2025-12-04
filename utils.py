@@ -758,6 +758,28 @@ def get_image_as_base64(image_path):
         st.error(f"Error loading image {image_path}: {e}")
         return "https://via.placeholder.com/800x600?text=Image+Not+Found"
 
-def custom_subheader(text,size = 'h3', help_text=None):
+# Deprecated custom_subheader (did not succesfully remove anchor links on subheaders)
+# def custom_subheader(text,size = 'h3', help_text=None):
+#     """Custom subheader matching st.subheader styling with optional help tooltip"""
+#     st.markdown(f"<{size} class='custom-subheader'>{text}</{size}>", unsafe_allow_html=True, help=help_text)
+
+
+def custom_subheader(text, help_text=None):
+    st.markdown("""
+    <style>
+    .custom-subheader {
+        color: #ffffff;
+        font-size: 1.75rem;
+        font-weight: 650;
+        margin-top: 25px;
+        margin-bottom: 6px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     """Custom subheader matching st.subheader styling with optional help tooltip"""
-    st.markdown(f"<{size} class='custom-subheader'>{text}</{size}>", unsafe_allow_html=True, help=help_text)
+    st.markdown(
+        f"<div class='custom-subheader'>{text}</div>",
+        unsafe_allow_html=True,
+        help=help_text     # Streamlit tooltip still works
+    )

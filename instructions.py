@@ -66,15 +66,15 @@ def show_instructions():
     on the Google Ngram dataset. This took us on a journey to answer the question "How does the usage of words or phrases vary over time 
     between different countries or languages?" The Google Ngram dataset is a massive collection of word 
     frequency data, derived from countless digitized books and other literature sources in the Google Books 
-    corpus which includes data for several languages. As such, by visualizing how these frequencies change 
-    over time and for different languages, one can observe linguistic and cultural trends.        
+    corpus which includes data for several languages. One can observe linguistic and cultural trends through visualizing how these 
+    frequencies change over time and for different languages.     
     </p>
     <hr style="border-top: 1px solid #333; width: 50%; margin: 20px auto;">
     <div class="instruction-header">Definitions</div>
     <p class="instruction-text">
         <b>What is an N-gram?</b><br>
         N-grams have a more nuanced and complex definition in linguistics and corpus analysis, but for the 
-    purpose of this dashboard, can be understood as any word or string of words (a phrase). 
+    purpose of this dashboard, can be understood as any word or string of words of length n (becoming a phrase). 
         <br><br>
         <b>What is Frequency?</b><br>
         In this dashboard, all mentions of "frequency" refer to relative frequency based on data from the Google 
@@ -102,20 +102,39 @@ def show_instructions():
     <div class="step-box">
         <div class="step-title">4. Fun Facts</div>
        Feel free to visit the Fun Facts tab to view quick visualizations we've created with pre-chosen words and 
-    phrases that tell a fun story.
+    phrases that tell a story.
     </div>
     <div class="step-box">
-        <div class="step-title">4. Compare Word Trends</div>
+        <div class="step-title">5. Compare Word Trends</div>
        You may also use the Compare Words tab to compare frequencies of words you choose, like creating your own fun facts graph.
     </div>
-    <br>
-    <div style="margin-top: 30px; padding: 20px; border-top: 1px solid #333;">
+    <div style="margin-top: 20px; padding: 10px;">
         <p style="font-size: 18px; color: #a8a8a8;">
             Ready to explore? Head to the 
             <a href="?tab=Dashboard" target="_self" style="color: #4da6ff; text-decoration: none; font-weight: bold;">
                 Dashboard
             </a> !
         </p>
+    </div>
+    <hr style="border-top: 1px solid #333; width: 50%; margin: 10px auto;">
+    <div class="instruction-header">Disclaimer</div>
+    <p class="instruction-text">
+        In this dashboard, we aim to provide an enhanced version of the Google Ngrams Viewer that is able to compare word 
+    frequencies across languages. We cannot guarantee appropriate translations or synonyms for all search terms. This is a 
+    data science project, and not a linguistics project. We recognize the many shortcomings of our methods of translation and 
+    synonym creation using pre-existing Python packages and API calls. This includes how they may fail to capture an intended 
+    meaning for certain languages or search terms. However, these issues are out of the scope of this project at this time. 
+    Please consider this when taking the information from this dashboard.    
+    </p>
+    <hr style="border-top: 1px solid #333; width: 50%; margin: 20px auto;">
+    <div class="instruction-header">Known Bugs</div>
+    <div class="step-box">
+        The auto detect language function is unreliable. We highly suggest manually selecting the input language for linguistic search.
+    </div>
+    <div class="step-box">
+        The deep-translator Python package used does not always provide accurate translations. In rare circumstances, the package does 
+        not provide any output at all for another language(s) (therefore some languages may be missing outright from the visualizations).
+    </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
