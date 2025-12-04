@@ -800,7 +800,15 @@ def custom_subheader3(text, help_text=None):
     .element-container:has(.custom-subheader2) {
         display: flex !important; 
         justify-content: center !important;
+        align-items: center !important;
         width: 100% !important;
+        flex-wrap: nowrap !important;
+    }
+    /* Keep the help icon inline */
+    .element-container:has(.custom-subheader2) > div {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
     }
     </style>
     """, unsafe_allow_html=True)
