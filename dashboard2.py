@@ -114,6 +114,7 @@ def show_dashboard():
         font-weight: 650;
         margin-top: 25px;
         margin-bottom: 6px;
+        text-align: center;
     }
     </style>
     """, unsafe_allow_html=True)
