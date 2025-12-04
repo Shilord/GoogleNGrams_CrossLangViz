@@ -320,7 +320,6 @@ def show_dashboard():
     @st.cache_data
     def get_synonyms_and_translations(target_word,num_synonyms,context_topics,pos_tag,input_language,selected_langs,is_phrase):
         target_word = target_word.lower()
-        print(f"ABC:{input_language}")
         #If target word is not in english, we just find translation of the word in english then proceed as usual
         if input_language!='en':
             trans_df = get_languages(target_word, input_language, ['en'])
