@@ -510,7 +510,9 @@ def show_dashboard():
         #custom_subheader(f"Time Series: Word Frequency Over Time",help_text = f"See how often your input term, along with all translations and synonyms in other languages, is used over time in this interactive smoothed time series graph (5-year moving average to reduce noise). Hover over lines, show/hide entries by clicking in the legend, use the language filter dropdown, or drag the range slider at the bottom to select time frame.")
         
         st.markdown(
-        "Time Series: Word Frequency Over Time",
+        """
+        Time Series: Word Frequency Over Time
+        """,
         unsafe_allow_html=True,
         help= "See how often your input term, along with all translations and synonyms in other languages, is used over time in this interactive smoothed time series graph (5-year moving average to reduce noise). Hover over lines, show/hide entries by clicking in the legend, use the language filter dropdown, or drag the range slider at the bottom to select time frame."
         )
