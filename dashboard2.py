@@ -492,6 +492,6 @@ def show_dashboard():
        
         # _,col2,_ = st.columns([0.3,0.5,0.05])
         # with col2: 
-        custom_subheader(f"Time Series: Word Frequency Over Time",help_text = "See how often your input term, along with all translations and synonyms in other languages, is used over time in this interactive smoothed time series graph (5-year moving average to reduce noise). Hover over lines, show/hide entries by clicking in the legend, use the language filter dropdown, or drag the range slider at the bottom to select time frame.")
+        custom_subheader(f"Time Series: Word Frequency Over Time",help_text = f"See how often your input term, along with all translations and synonyms in other languages, is used over time in this interactive smoothed time series graph (5-year moving average to reduce noise). Hover over lines, show/hide entries by clicking in the legend, use the language filter dropdown, or drag the range slider at the bottom to select time frame.")
         time_chart = create_timeseries(st.session_state['final_data'])
         st.plotly_chart(time_chart, use_container_width=True)
