@@ -759,28 +759,53 @@ def get_image_as_base64(image_path):
         return "https://via.placeholder.com/800x600?text=Image+Not+Found"
 
 # Deprecated custom_subheader (did not succesfully remove anchor links on subheaders)
-# def custom_subheader(text,size = 'h3', help_text=None):
-#     """Custom subheader matching st.subheader styling with optional help tooltip"""
-#     st.markdown(f"<{size} class='custom-subheader'>{text}</{size}>", unsafe_allow_html=True, help=help_text)
+def custom_subheader2(text,size = 'h3', help_text=None):
+    """Custom subheader matching st.subheader styling with optional help tooltip"""
+    st.markdown(f"<{size} class='custom-subheader'>{text}</{size}>", unsafe_allow_html=True, help=help_text)
 
 
-# def custom_subheader(text, help_text=None):
-#     st.markdown("""
-#     <style>
-#     .custom-subheader {
-#         color: #ffffff;
-#         font-size: 1.75rem;
-#         font-weight: 650;
-#         margin-top: 25px;
-#         margin-bottom: 6px;
-#         text-align: center;
-#     }
-#     </style>
-#     """, unsafe_allow_html=True)
+def custom_subheader(text, help_text=None):
+    st.markdown("""
+    <style>
+    .custom-subheader2 {
+        color: #ffffff;
+        font-size: 1.75rem;
+        font-weight: 650;
+        margin-top: 25px;
+        margin-bottom: 6px;
+        text-align: center;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     
-#     """Custom subheader matching st.subheader styling with optional help tooltip"""
-#     st.markdown(
-#         f"<div class='custom-subheader'>{text}</div>",
-#         unsafe_allow_html=True,
-#         help=help_text     # Streamlit tooltip still works
-#     )
+    """Custom subheader matching st.subheader styling with optional help tooltip"""
+    st.markdown(
+        f"<div class='custom-subheader2'>{text}</div>",
+        unsafe_allow_html=True,
+        help=help_text     # Streamlit tooltip still works
+    )
+
+def custom_subheader3(text, help_text=None):
+    st.markdown("""
+    <style>
+    .custom-subheader2 {
+        color: #ffffff;
+        font-size: 1.75rem;
+        font-weight: 650;
+        margin-top: 25px;
+        margin-bottom: 6px;
+        text-align: center;
+    }
+    /* Target the parent container when help is present */
+    .element-container:has(.custom-subheader2) {
+        display: flex;
+        justify-content: center;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(
+        f"<div class='custom-subheader2'>{text}</div>",
+        unsafe_allow_html=True,
+        help=help_text
+    )

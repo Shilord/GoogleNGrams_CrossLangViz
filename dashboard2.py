@@ -356,7 +356,6 @@ def show_dashboard():
     @st.cache_data
     def get_synonyms_and_translations(target_word,num_synonyms,context_topics,pos_tag,input_language,selected_langs,is_phrase):
         target_word = target_word.lower()
-        print(f"ABC:{input_language}")
         #If target word is not in english, we just find translation of the word in english then proceed as usual
         if input_language!='en':
             trans_df = get_languages(target_word, input_language, ['en'])
@@ -465,8 +464,8 @@ def show_dashboard():
 
             world_map = empty_map.copy(deep=True)
 
-            #custom_subheader(f"Interactive World Heatmap for Word Frequencies - Year {year_range}",help_text = world_map_tooltip)
-            st.subheader(f"Word Cloud: Words by Frequency - Year {year_range}", anchor=False, help=world_map_tooltip)
+            custom_subheader3(f"Interactive World Heatmap for Word Frequencies - Year {year_range}",help_text = world_map_tooltip)
+            # st.subheader(f"Word Cloud: Words by Frequency - Year {year_range}", anchor=False, help=world_map_tooltip)
 
             fig = create_frequency_map_plotly(world_map, st.session_state['final_data'], year_range)
             if fig:
@@ -480,8 +479,8 @@ def show_dashboard():
             # --- END BAR CHART INTEGRATION ---
 
             with col_chart_left:
-                #custom_subheader(f"Bar Graph: Frequencies by Language - Year {year_range}",help_text = bar_graph_tooltip)
-                st.subheader(f'Bar Graph: Frequencies by Language - Year {year_range}', anchor=False, help=bar_graph_tooltip)
+                custom_subheader3(f"Bar Graph: Frequencies by Language - Year {year_range}",help_text = bar_graph_tooltip)
+                # st.subheader(f'Bar Graph: Frequencies by Language - Year {year_range}', anchor=False, help=bar_graph_tooltip)
                 # 2. Display the Plotly Bar Chart
                 if fig_bar:
                     st.plotly_chart(fig_bar, use_container_width=True)
@@ -489,16 +488,16 @@ def show_dashboard():
                     st.text("Bar Graph here") # This will now be replaced by the chart if data exists
 
             with col_chart_right:
-                #custom_subheader(f"Word Cloud: Words by Frequency - Year {year_range}",help_text = word_cloud_tooltip)
-                st.subheader(f"Word Cloud: Words by Frequency - Year {year_range}", anchor=False, help=word_cloud_tooltip)
+                custom_subheader3(f"Word Cloud: Words by Frequency - Year {year_range}",help_text = word_cloud_tooltip)
+                # st.subheader(f"Word Cloud: Words by Frequency - Year {year_range}", anchor=False, help=word_cloud_tooltip)
                 if word_cloud_image_buffer:
                     st.image(word_cloud_image_buffer, use_container_width=True)
         
        
         # _,col2,_ = st.columns([0.3,0.5,0.05])
         # with col2: 
-        #custom_subheader(f"Time Series: Word Frequency Over Time",help_text = timeseries_tooltip)
-        st.subheader(f'Time Series: Word Frequency Over Time', anchor=False, help=timeseries_tooltip)
+        custom_subheader3(f"Time Series: Word Frequency Over Time",help_text = timeseries_tooltip)
+        # st.subheader(f'Time Series: Word Frequency Over Time', anchor=False, help=timeseries_tooltip)
 
         time_chart = create_timeseries(st.session_state['final_data'])
         st.plotly_chart(time_chart, use_container_width=True)
