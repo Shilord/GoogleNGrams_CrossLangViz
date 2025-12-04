@@ -428,11 +428,7 @@ def show_dashboard():
             )
 
             world_map = empty_map.copy(deep=True)
-            _,col1,_ = st.columns([0.3,0.6,0.1])
-            with col1: 
-            # st.markdown("<h1 style='text-align: center;'>Words Across Borders</h1>", unsafe_allow_html=True)
-            # st.markdown(f"<h3 style='text-align: center;'>Interactive World Heatmap for Word Frequencies - Year {year_range}</h3>", unsafe_allow_html=True,help = world_map_tooltip)
-                st.subheader(f"Interactive World Heatmap for Word Frequencies - Year {year_range}",help = world_map_tooltip,anchor = False)
+            custom_subheader(f"Interactive World Heatmap for Word Frequencies - Year {year_range}",help_text = world_map_tooltip)
             fig = create_frequency_map_plotly(world_map, st.session_state['final_data'], year_range)
             if fig:
                 st.plotly_chart(fig, use_container_width=True,config={'displayModeBar': True})
@@ -445,7 +441,7 @@ def show_dashboard():
             # --- END BAR CHART INTEGRATION ---
 
             with col_chart_left:
-                st.subheader(f"Bar Graph: Frequencies by Language - Year {year_range}", help = bar_graph_tooltip ,anchor = False)
+                custom_subheader(f"Bar Graph: Frequencies by Language - Year {year_range}",help_text = bar_graph_tooltip)
                 # 2. Display the Plotly Bar Chart
                 if fig_bar:
                     st.plotly_chart(fig_bar, use_container_width=True)
@@ -453,13 +449,13 @@ def show_dashboard():
                     st.text("Bar Graph here") # This will now be replaced by the chart if data exists
 
             with col_chart_right:
-                st.subheader(f"Word Cloud: Words by Frequency - Year {year_range}", help = word_cloud_tooltip, anchor = False )
+                custom_subheader(f"Word Cloud: Words by Frequency - Year {year_range}",help_text = word_cloud_tooltip)
                 if word_cloud_image_buffer:
                     st.image(word_cloud_image_buffer, use_container_width=True)
         
        
-        _,col2,_ = st.columns([0.3,0.5,0.05])
-        with col2: 
-            st.subheader(f"Time Series: Word Frequency Over Time", help = timeseries_tooltip ,anchor = False)
+        # _,col2,_ = st.columns([0.3,0.5,0.05])
+        # with col2: 
+        custom_subheader(f"Time Series: Word Frequency Over Time",help_text = timeseries_tooltip)
         time_chart = create_timeseries(st.session_state['final_data'])
         st.plotly_chart(time_chart, use_container_width=True)

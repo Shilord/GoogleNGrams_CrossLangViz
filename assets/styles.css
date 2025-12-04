@@ -74,3 +74,17 @@ div[data-testid="stNumberInput"] {
     margin-top: -10px !important;
 }
 
+.custom-subheader {
+    color: #FAFAFA;
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1;
+    margin-top: 0;
+    margin-bottom: 0.4rem;
+    font-family: sans-serif;
+}
+
+.element-container:has(.custom-subheader) {
+    display: flex;
+    justify-content: center;
+}

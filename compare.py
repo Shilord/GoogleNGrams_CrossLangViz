@@ -5,10 +5,11 @@ import plotly.graph_objects as go
 from utils import * 
 def compare_words():
     # --- Header ---
-    _,col,_ = st.columns([0.425,0.9,0.1])
+    _,col,_ = st.columns([0.425,1.5,0.1])
     with col:
+     # custom_subheader("Compare Word Trends in the Same Language",size = 'h1')
         st.title("Compare Word Trends in the Same Language",anchor = False)
-    _,col2,_ = st.columns([0.541,1.2,0.1])
+    _,col2,_ = st.columns([0.39,1.5,0.1])
     with col2:
         st.caption("""
         Compare the historical popularity of multiple words simultaneously. Enter words below to generate a time-series comparison and a correlation heatmap.

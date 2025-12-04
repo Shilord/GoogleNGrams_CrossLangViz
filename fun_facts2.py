@@ -2,25 +2,27 @@ import streamlit as st
 import time
 import base64
 import os
+from utils import *
 
 # --- DATA ---
 images_raw = {
+    
+    "fun_facts_Images/3_ts_politics_static.png": "This graph shows how often words like communism, socialism, capitalism, nazism, and fascism appeared in English books over time. Notice how socialism and communism surged in popularity during the early 20th century, peaking around the Cold War era. Capitalism steadily climbed and now dominates the conversation.",
+
+    "fun_facts_Images/8_ts_diets_static.png": "This graph tracks the popularity of dietary terms like vegan, vegetarian, and carnivore in English books from 1960 to the present. Vegetarianism has long held the lead, steadily climbing as plant-based diets moved into the mainstream. However, the real story is the explosive rise of the word 'vegan'.",
+
+    "fun_facts_Images/5_ts_mohammed_static5.png": "This graph compares how often different spellings of the name Mohammad/ Mohammed/ Muhammad/ Muhammed/ Muhamed appeared in English books from 1850 to 2025. The most common spelling overall is Muhammad, which has consistently led the pack, especially after the mid-20th century.",
+
     "fun_facts_Images/1_ts_phones_static.png": "This graph compares how often the phrases 'Blackberry phone' and 'Apple iPhone' appeared in English books over time. Around 2005, both terms emerged together, but Blackberry quickly took the lead, riding high during its golden era. However, by 2010, the iPhone began its steady climb, eventually overtaking Blackberry as smartphones transformed our lives.",
     
     "fun_facts_Images/2_bars_religions_static.png": "This chart compares how often major world religions—Christianity, Islam, Judaism, Hinduism, and Buddhism—appeared in English books in 1800, 1900, and 2020. In 1800, Christianity dominated the conversation, while Buddhism barely registered. By 1900, mentions of Buddhism, Islam, and Judaism surged, reflecting growing global awareness.",
-    
-    "fun_facts_Images/3_ts_politics_static.png": "This graph shows how often words like communism, socialism, capitalism, nazism, and fascism appeared in English books over time. Notice how socialism and communism surged in popularity during the early 20th century, peaking around the Cold War era. Capitalism steadily climbed and now dominates the conversation.",
-    
+        
     "fun_facts_Images/4_heatmap_politics_static.png": "This chart shows the Pearson correlation between mentions of major political ideologies—communism, socialism, capitalism, nazism, and fascism—in English books from 1830 to 2022. The strongest link is between communism and socialism (0.81), which makes sense given their shared roots.",
-    
-    "fun_facts_Images/5_ts_mohammed_static5.png": "This graph compares how often different spellings of the name Mohammad/ Mohammed/ Muhammad/ Muhammed/ Muhamed appeared in English books from 1850 to 2025. The most common spelling overall is Muhammad, which has consistently led the pack, especially after the mid-20th century.",
     
     "fun_facts_Images/6_ts_sports_static.png": "This graph tracks how often the words football, tennis, and rugby appeared in English books over time. In the early 1800s, rugby dominated the conversation, but by the late 19th century, football started its meteoric rise, eventually becoming the most mentioned sport in literature.",
     
     "fun_facts_Images/7_bars_academic_terms_static.png": "This chart compares how often academic terms appeared in English books across three key years: 1900, 1950, and 2000. In 1900, psychology led the pack, while psychoanalysis barely registered. By 1950, psychology skyrocketed, and psychiatry and psychoanalysis gained traction.",
-    
-    "fun_facts_Images/8_ts_diets_static.png": "This graph tracks the popularity of dietary terms like vegan, vegetarian, and carnivore in English books from 1960 to the present. Vegetarianism has long held the lead, steadily climbing as plant-based diets moved into the mainstream. However, the real story is the explosive rise of the word 'vegan'.",
-    
+        
     "fun_facts_Images/9_bars_cancers_static.png": "This chart shows how mentions of different cancer types in English books evolved over time—1870, 1955, and 2000. In 1870, breast cancer led the conversation, while brain cancer was barely on the radar. By 1955, lung cancer surged to the top, reflecting growing awareness of smoking-related risks."
 }
 
@@ -49,9 +51,10 @@ def preload_cards(images):
     return cards
 
 def show_fun_facts():
-    _,col,_ = st.columns([0.435,0.5,0.1])
+    _,col,_ = st.columns([0.38,0.5,0.1])
     with col:
-        st.title("Fun Facts Gallery",anchor = False)
+        custom_subheader(f"Fun Facts Gallery",size = 'h1')
+        # st.title("Fun Facts Gallery",anchor = False)
     
     # Load CSS
     st.markdown("""

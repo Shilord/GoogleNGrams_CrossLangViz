@@ -80,21 +80,19 @@ def set_params(word, corpus, min_year, max_year):
     return params
 
 # function to get direct translations for words
-# def get_languages(input, input_lang, langs_selected):
-#     df = pd.DataFrame({'word' : input,
-#                        'language' : input_lang}, index = [0])
-#     for lang in langs_selected:
-#         if lang != input_lang:
-#             if input_lang == 'zh':
-#                 input_lang = 'zh-CN'
-#             print("ABC" + input_lang)
-#             print(lang)
-#             translator = GoogleTranslator(source = input_lang, target = lang)
-#             new_entry = pd.DataFrame({'word' : translator.translate(input),
-#                             'language' : lang}, index = [0])
-#             df = pd.concat([df, new_entry], ignore_index = True)
-#             df['language'] = df['language'].replace('zh-CN', 'zh')
-#     return df
+def get_languages(input, input_lang, langs_selected):
+    df = pd.DataFrame({'word' : input,
+                       'language' : input_lang}, index = [0])
+    for lang in langs_selected:
+        if lang != input_lang:
+            if input_lang == 'zh':
+                input_lang = 'zh-CN'
+            translator = GoogleTranslator(source = input_lang, target = lang)
+            new_entry = pd.DataFrame({'word' : translator.translate(input),
+                            'language' : lang}, index = [0])
+            df = pd.concat([df, new_entry], ignore_index = True)
+            df['language'] = df['language'].replace('zh-CN', 'zh')
+    return df
 
 # batch translate
 def get_languages_batch(input, input_lang, langs_selected):
@@ -108,8 +106,6 @@ def get_languages_batch(input, input_lang, langs_selected):
         if lang != input_lang:
             if input_lang == 'zh':
                 input_lang = 'zh-CN'
-            print("ABC" + input_lang)
-            print(lang)
             translator = GoogleTranslator(source = input_lang, target = lang)
             new_words = translator.translate_batch(input)
             for i in range(len(new_words)):
@@ -484,7 +480,13 @@ def create_word_cloud(final_df, year_range):
                     f"<b>Word: '{row['Word']}'</b><br>"
                     f"Language: {row['Language']}<br>"
                     "Freq: %{y:.2f} μ<extra></extra>"
-                )
+                ),
+                text = f"<b>{row['Word']}</b>",
+                textposition='inside', # Tries to put inside, falls back to outside if tiny
+                textfont=dict(
+                    color='black',
+                    family="Arial"
+                ),
             ))
 
     fig_bar.update_layout(
@@ -755,3 +757,7 @@ def get_image_as_base64(image_path):
     except Exception as e:
         st.error(f"Error loading image {image_path}: {e}")
         return "https://via.placeholder.com/800x600?text=Image+Not+Found"
+
+def custom_subheader(text,size = 'h3', help_text=None):
+    """Custom subheader matching st.subheader styling with optional help tooltip"""
+    st.markdown(f"<{size} class='custom-subheader'>{text}</{size}>", unsafe_allow_html=True, help=help_text)
