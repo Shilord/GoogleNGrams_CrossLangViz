@@ -773,6 +773,7 @@ def get_image_as_base64(image_path):
 #         font-weight: 650;
 #         margin-top: 25px;
 #         margin-bottom: 6px;
+#         text-align: center;
 #     }
 #     </style>
 #     """, unsafe_allow_html=True)
