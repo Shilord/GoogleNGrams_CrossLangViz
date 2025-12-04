@@ -764,22 +764,22 @@ def get_image_as_base64(image_path):
 #     st.markdown(f"<{size} class='custom-subheader'>{text}</{size}>", unsafe_allow_html=True, help=help_text)
 
 
-def custom_subheader(text, help_text=None):
-    st.markdown("""
-    <style>
-    .custom-subheader {
-        color: #ffffff;
-        font-size: 1.75rem;
-        font-weight: 650;
-        margin-top: 25px;
-        margin-bottom: 6px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+# def custom_subheader(text, help_text=None):
+#     st.markdown("""
+#     <style>
+#     .custom-subheader {
+#         color: #ffffff;
+#         font-size: 1.75rem;
+#         font-weight: 650;
+#         margin-top: 25px;
+#         margin-bottom: 6px;
+#     }
+#     </style>
+#     """, unsafe_allow_html=True)
     
-    """Custom subheader matching st.subheader styling with optional help tooltip"""
-    st.markdown(
-        f"<div class='custom-subheader'>{text}</div>",
-        unsafe_allow_html=True,
-        help=help_text     # Streamlit tooltip still works
-    )
+#     """Custom subheader matching st.subheader styling with optional help tooltip"""
+#     st.markdown(
+#         f"<div class='custom-subheader'>{text}</div>",
+#         unsafe_allow_html=True,
+#         help=help_text     # Streamlit tooltip still works
+#     )
