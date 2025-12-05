@@ -78,11 +78,11 @@ def show_instructions():
         <br><br>
         <b>What is Frequency?</b><br>
         In this dashboard, all mentions of "frequency" refer to relative frequency based on data from the Google 
-    Ngram dataset. Please note that many visualizations (all of main dashboard) report said frequency in micro units (10e-6, symbol: µ).
-    Relative frequency for an Ngram is defined as the number of times it appears per million 
-    words in the literature from that language for that year. While the Google Books corpus is not all-inclusive 
-    or entirely free of sampling bias, the relative frequency still serves as an appropriate metric for 
-    "popularity" or "usage" of a given word or phrase.   
+    Ngram dataset. Please note that many visualizations (all of main dashboard) report said frequency in micro units 
+    (10<sup>−6</sup>, also known as parts per million - ppm, symbol: µ). Relative frequency for an Ngram is defined 
+    as the number of times it appears per million words in the literature from that language for that year. While the 
+    Google Books corpus is not all-inclusive or entirely free of sampling bias, the relative frequency still serves 
+    as an appropriate metric for "popularity" or "usage" of a given word or phrase.   
     </p>
     <hr style="border-top: 1px solid #333; width: 50%; margin: 20px auto;">
     <div class="instruction-header">Getting Started</div>
