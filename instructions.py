@@ -78,7 +78,8 @@ def show_instructions():
         <br><br>
         <b>What is Frequency?</b><br>
         In this dashboard, all mentions of "frequency" refer to relative frequency based on data from the Google 
-    Ngram dataset. Relative frequency for an Ngram is defined as the number of times it appears per million 
+    Ngram dataset. Please note that many visualizations (all of main dashboard) report said frequency in micro units (10e-6, symbol: µ).
+    Relative frequency for an Ngram is defined as the number of times it appears per million 
     words in the literature from that language for that year. While the Google Books corpus is not all-inclusive 
     or entirely free of sampling bias, the relative frequency still serves as an appropriate metric for 
     "popularity" or "usage" of a given word or phrase.   
@@ -127,13 +128,19 @@ def show_instructions():
     Please consider this when taking the information from this dashboard.    
     </p>
     <hr style="border-top: 1px solid #333; width: 50%; margin: 20px auto;">
-    <div class="instruction-header">Known Bugs</div>
+    <div class="instruction-header">Known Issues</div>
     <div class="step-box">
         The auto detect language function is unreliable. We highly suggest manually selecting the input language for linguistic search.
     </div>
     <div class="step-box">
         The deep-translator Python package used does not always provide accurate translations. In rare circumstances, the package does 
         not provide any output at all for another language(s) (therefore some languages may be missing outright from the visualizations).
+    </div>
+    <div class="step-box">
+        When the input term is not English, it is first translated to English and synonyms are generated in English before it is then 
+        translated to the other languages (including back to the original input language). This means that in certain circumstances, 
+        if the most common translation back into the input language is different from the input term, the word or phrase shown for the 
+        input language is not the input term.
     </div>
     </div>
 </div>
