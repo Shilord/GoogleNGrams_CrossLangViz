@@ -1,7 +1,7 @@
 import streamlit as st
 from dashboard2 import show_dashboard
 from fun_facts2 import show_fun_facts
-from instructions import show_instructions
+from user_manual import show_instructions
 from compare import compare_words
 from streamlit_option_menu import option_menu
 
