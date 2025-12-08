@@ -487,7 +487,7 @@ def create_word_cloud(final_df, year_range):
                 textfont=dict(
                     color='black',
                     family="Arial",
-                    size= 14
+                    size= 15
                 ),
             ))
 
@@ -501,7 +501,7 @@ def create_word_cloud(final_df, year_range):
         height=600,
         margin=dict(l=0, r=0, t=20, b=10, pad=0),
         font=dict(size=10),
-        hoverlabel=dict(bgcolor="white", font_size=12, font_color="black"),
+        hoverlabel=dict(bgcolor="white", font_size=16, font_color="black"),
         yaxis=dict(automargin=True)
     )
 
