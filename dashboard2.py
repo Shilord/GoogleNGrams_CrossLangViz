@@ -461,6 +461,12 @@ def show_dashboard():
                 step=1,
                 help="Select a year for analysis."
             )
+            # year_range = st.select_slider(
+            #     "Select Target Year",
+            #     options=list(range(MIN_YEAR, MAX_YEAR + 1)),
+            #     value=2000,
+            #     help="Select a year for analysis."
+            # )
 
             world_map = empty_map.copy(deep=True)
 

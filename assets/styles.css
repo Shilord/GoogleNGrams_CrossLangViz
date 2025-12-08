@@ -88,3 +88,25 @@ div[data-testid="stNumberInput"] {
     display: flex;
     justify-content: center;
 }
+
+/* Remove blue track before slider thumb */
+div[data-baseweb="slider"] > div > div > div:first-child {
+    background: transparent !important;
+}
+
+/* Make the base track gray/dark */
+div[data-baseweb="slider"] > div > div:first-child {
+    background: rgba(250, 250, 250, 0.2) !important;
+}
+
+/* Style the slider thumb to be blue and visible */
+div[data-baseweb="slider"] [role="slider"] {
+    background-color: #1f77ff !important;
+    width: 12px !important;
+    height: 12px !important;
+    border: 6px solid #1f77ff !important;
+}
+
+div[data-baseweb="slider"] > div:last-child > div {
+    background: transparent !important;
+}
