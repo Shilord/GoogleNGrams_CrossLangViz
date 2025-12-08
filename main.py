@@ -21,7 +21,7 @@ if 'final_data' not in st.session_state:
 query_params = st.query_params
 tab_from_url = query_params.get("tab", None)
 
-# Sidebar navigation
+# Sidebar navigation tab
 with st.sidebar:
     default_idx = 0
     if tab_from_url == "User Manual":
