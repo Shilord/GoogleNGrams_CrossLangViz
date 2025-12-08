@@ -331,6 +331,7 @@ def create_timeseries(final_df):
     fig.update_layout(
         updatemenus=[
             dict(
+                name="LanguageDropdown",
                 active=0,
                 buttons=buttons,
                 direction="down",
@@ -340,8 +341,8 @@ def create_timeseries(final_df):
                 xanchor="left",
                 y=1.0,
                 yanchor="top",
-                bgcolor="#2b2b2b", # Dark button background
-                font=dict(color="white")
+                bgcolor="#D3D3D3", # Dark button background
+                font=dict(color="black")
             )
         ]
     )
@@ -485,7 +486,8 @@ def create_word_cloud(final_df, year_range):
                 textposition='inside', # Tries to put inside, falls back to outside if tiny
                 textfont=dict(
                     color='black',
-                    family="Arial"
+                    family="Arial",
+                    size= 14
                 ),
             ))
 
